@@ -1,3 +1,4 @@
+#include <ctime>
 #include <sstream>
 #include <iostream>
 
@@ -21,6 +22,12 @@ parentResource(_parentResource) {
 
 void ResourceMethod::methodHandler(coap_pdu_t *request, coap_pdu_t *response, std::ostream &log) {
     uint8_t buf[256];
+    
+    /* TODO: Allow selecting time format */
+    char       timebuf[32];
+    time_t     time = std::time(nullptr);
+    struct tm *tm   = localtime(&time);
+    strftime(timebuf, 32, "%Y-%m-%dT%H:%M:%S", tm);
 
     std::stringstream ss;
 
@@ -55,21 +62,20 @@ void ResourceMethod::methodHandler(coap_pdu_t *request, coap_pdu_t *response, st
             break;
     }
 
+    std::string logValue = "";
+    /* TODO: Handle indentation of multi-line output, possibly print a
+     * timestamp on each line. */
+    logValue += timebuf;
+    logValue += " | " + this->methText[this->config.type];
+    if(ss.str().size()) {
+        logValue += ": " + ss.str();
+    }
+
     if(this->config.printValue) {
-        std::cout << this->methText[this->config.type];
-        if(ss.str().size()) {
-            std::cout << ": " << ss.str() << std::endl;
-        } else {
-            std::cout << std::endl;
-        }
+        std::cout << logValue << std::endl;
     }
     if(this->config.logValue) {
-        log << this->methText[this->config.type];
-        if(ss.str().size()) {
-            log << ": " << ss.str() << std::endl;
-        } else {
-            log << std::endl;
-        }
+        log << logValue << std::endl;
     }
 }
 
