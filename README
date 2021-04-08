@@ -1,0 +1,24 @@
+Coap Server
+-----------
+
+This CoAP server is designed to be highly configurable to allow it's use with a
+variety of IoT devices, for testing or for low-scale use.
+
+Current Features:
+ - GET, PUT, and POST
+    - GET: Returns the value of the resource
+    - PUT,POST: Print the sent data, and/or set the current value of the resource
+ - Resource observation
+ - Multiple data format support
+    - MSGPACK
+    - Plaintext
+    - Raw data represented as hex
+
+Planned Features:
+ - Actually utilize max-age config parameter
+ - Improved documentation
+ - Logging requests to file(s)
+ - Run commands with request data
+ - Set a resource's value from an external program
+ - Encoding responses to a GET request
+ - Possibly listen to any resource that follows a given format
