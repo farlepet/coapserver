@@ -93,6 +93,9 @@ ResourceMethodConfig::ResourceMethodConfig(nlohmann::json &_json, ResourceMethod
     if(_json.contains("log") && _json["log"].is_boolean()) {
         this->logValue = _json["log"];
     }
+    if(_json.contains("store") && _json["store"].is_boolean()) {
+        this->store = _json["store"];
+    }
     if(_json.contains("cmd") && _json["cmd"].is_string()) {
         this->cmd = _json["cmd"];
     }

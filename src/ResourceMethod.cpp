@@ -23,14 +23,13 @@ void ResourceMethod::methodHandler(coap_pdu_t *request, coap_pdu_t *response, st
     uint8_t buf[256];
 
     std::stringstream ss;
-    ss << this->methText[this->config.type];
 
     std::string path = this->parentResource.getPath();
 
     switch(this->config.type) {
         case ResourceMethodType::GET: {
             std::string val = this->parentResource.getValue();
-            ss << ": " << val;
+            ss << val;
             coap_add_option(response, COAP_OPTION_CONTENT_FORMAT,
                             coap_encode_var_safe(buf, 16, COAP_MEDIATYPE_TEXT_PLAIN), buf);
             coap_add_option(response, COAP_OPTION_MAXAGE,
@@ -44,9 +43,11 @@ void ResourceMethod::methodHandler(coap_pdu_t *request, coap_pdu_t *response, st
         } break;
         case ResourceMethodType::PUT:
         case ResourceMethodType::POST:
-            if (this->fmt) {
-                ss << ": ";
+            if(this->fmt) {
                 this->fmt->decode(request, ss);
+                if(this->config.store) {
+                    this->parentResource.setValue(ss.str());
+                }
             }
             response->code = COAP_RESPONSE_CODE_OK;
             break;
@@ -54,12 +55,20 @@ void ResourceMethod::methodHandler(coap_pdu_t *request, coap_pdu_t *response, st
             break;
     }
 
-    if(ss.str().size()) {
-        if(this->config.printValue) {
-            std::cout << ss.str() << std::endl;
+    if(this->config.printValue) {
+        std::cout << this->methText[this->config.type];
+        if(ss.str().size()) {
+            std::cout << ": " << ss.str() << std::endl;
+        } else {
+            std::cout << std::endl;
         }
-        if(this->config.logValue) {
-            log << ss.str() << std::endl;
+    }
+    if(this->config.logValue) {
+        log << this->methText[this->config.type];
+        if(ss.str().size()) {
+            log << ": " << ss.str() << std::endl;
+        } else {
+            log << std::endl;
         }
     }
 }

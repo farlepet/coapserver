@@ -26,6 +26,8 @@ struct ResourceMethodConfig {
     bool               printValue = false;
     /** Whether or not to log requests to a file */
     bool               logValue   = false;
+    /** Whether or not to store the received data as the resource's value */
+    bool               store      = false;
     /** Command to run when a request is received */
     std::string        cmd        = "";
 

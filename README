@@ -13,12 +13,12 @@ Current Features:
     - MSGPACK
     - Plaintext
     - Raw data represented as hex
+ - Logging to a separate file for each resource
 
 Planned Features:
  - Actually utilize max-age config parameter
- - Ability to select config file from 
+ - Ability to select config file from command-line flags
  - Improved documentation
- - Logging requests to file(s)
  - Run commands with request data
  - Set a resource's value from an external program
  - Encoding responses to a GET request
