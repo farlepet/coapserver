@@ -16,6 +16,7 @@ Current Features:
 
 Planned Features:
  - Actually utilize max-age config parameter
+ - Ability to select config file from 
  - Improved documentation
  - Logging requests to file(s)
  - Run commands with request data

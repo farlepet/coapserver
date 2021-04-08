@@ -1,0 +1,48 @@
+{
+    "endpoint": {
+        "address": "0.0.0.0",
+        "port": "5683"
+    },
+    "resources": [
+        {
+            "name": "Example Resource 1",
+            "play": "example/res1",
+            "value": "12345",
+            "observable": true,
+            "maxage": 240,
+            "methods": {
+                "GET": {
+                    "format": "STRING",
+                    "print": true
+                },
+                "PUT": {
+                    "format": "STRING",
+                    "print": true,
+                    "log": true,
+                    "store": true
+                },
+                "PUSH": {
+                    "format": "MSGPACK",
+                    "print": true,
+                    "log": true
+                }
+            }
+        },
+        {
+            "name": "Example Resource 2",
+            "path": "example/res2",
+            "methods": {
+                "PUT": {
+                    "format": "HEX",
+                    "print": true,
+                    "log": true
+                },
+                "POST": {
+                    "format": "MSGPACK",
+                    "print": true,
+                    "log": true
+                }
+            }
+        }
+    ]
+}
