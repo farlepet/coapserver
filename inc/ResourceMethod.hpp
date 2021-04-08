@@ -3,6 +3,7 @@
 
 #include <map>
 #include <string>
+#include <iosfwd>
 
 #include <coap2/coap.h>
 
@@ -26,7 +27,7 @@ class ResourceMethod {
     public:
         ResourceMethod(Resource &_parentResource, ResourceMethodConfig &_config);
         
-        void methodHandler(coap_pdu_t *request, coap_pdu_t *response);
+        void methodHandler(coap_pdu_t *request, coap_pdu_t *response, std::ostream &log);
 
         ResourceMethodType getMethodType();
 };

@@ -7,6 +7,9 @@
 
 Config::Config(std::string path) {
     std::ifstream in(path);
+    if(in.fail()) {
+        throw std::runtime_error("Could not open config file " + path + "for reading!");
+    }
 
     in >> this->config;
 
@@ -48,11 +51,13 @@ ResourceConfig::ResourceConfig(nlohmann::json &_json) {
     if(_json.contains("path") && _json["path"].is_string()) {
         this->resourcePath = _json["path"];
     } else {
-        std::cerr << "ERROR: Resource does not include resource path!" << std::endl;
+        throw std::runtime_error("ERROR: Resource does not include resource path!");
     }
     if(_json.contains("value") && _json["value"].is_string()) {
         this->initialValue = _json["value"];
-        std::cerr << "Value: " << this->initialValue << std::endl;
+    }
+    if(_json.contains("logfile") && _json["logfile"].is_string()) {
+        this->logFile = _json["logfile"];
     }
     if(_json.contains("observable") && _json["observable"].is_boolean()) {
         this->observable = _json["observable"];
@@ -73,7 +78,7 @@ ResourceConfig::ResourceConfig(nlohmann::json &_json) {
             this->methods.push_back(ResourceMethodConfig(_json["methods"]["PUT"], ResourceMethodType::PUT));
         }
     } else {
-        std::cerr << "ERROR: Resource does not include any methods!" << std::endl;
+        throw std::runtime_error("ERROR: Resource does not include any methods!");
     }
 }
 

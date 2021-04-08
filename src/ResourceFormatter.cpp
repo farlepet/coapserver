@@ -15,6 +15,6 @@ ResourceFormatter *ResourceFormatter::createResourceFormatter(ResourceMethodConf
     } else if(_config.format == "MSGPACK") {
         return new ResourceFormatterMsgpack();
     } else {
-        throw "Invalid resource format type";
+        throw std::runtime_error("Invalid resource format type");
     }
 }

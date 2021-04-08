@@ -1,3 +1,4 @@
 coap_server
 *.o
+*.log
 config.json

@@ -11,6 +11,16 @@ config(_config) {
     std::list<ResourceMethodConfig>::iterator it = methodConfigs.begin();
     for(; it != methodConfigs.end(); it++) {
         this->methods.push_back(ResourceMethod(*this, *it));
+        if(it->logValue && !this->logFile.is_open()) {
+            if(this->config.logFile.size()) {
+                this->logFile.open(this->config.logFile, std::fstream::out | std::fstream::app);
+                if(this->logFile.fail()) {
+                    throw std::runtime_error("Failed to open log file " + this->config.logFile + " for resource " + this->config.resourcePath);
+                }
+            } else {
+                throw std::runtime_error("Resource method requests logging, but resource " + this->config.resourcePath + " has no defined log file");
+            }
+        }
     }
 }
 
@@ -58,7 +68,7 @@ void Resource::handleCoAPRequest(coap_pdu_t *request, coap_pdu_t *response, Reso
     std::list<ResourceMethod>::iterator it = this->methods.begin();
     for(; it != this->methods.end(); it++) {
         if(it->getMethodType() == method) {
-            it->methodHandler(request, response);
+            it->methodHandler(request, response, this->logFile);
             break;
         }
     }

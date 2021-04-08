@@ -1,6 +1,7 @@
 #ifndef _RESOURCE_HPP_
 #define _RESOURCE_HPP_
 
+#include <fstream>
 #include <string>
 #include <list>
 
@@ -18,6 +19,8 @@ class Resource {
         std::string value;
 
         coap_resource_t *res;
+
+        std::fstream logFile;
         
         static void coapHandlerGet(coap_context_t *context, coap_resource_t *resource, coap_session_t *session,
                                    coap_pdu_t *request, coap_binary_t *token, coap_string_t *query,
