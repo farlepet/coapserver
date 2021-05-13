@@ -1,5 +1,6 @@
 #include <fstream>
 #include <iostream>
+#include <sstream>
 
 #include <nlohmann/json.hpp>
 
@@ -13,6 +14,9 @@ Config::Config(std::string path) {
 
     in >> this->config;
 
+    std::list<TemplateConfig>   templates;
+    std::list<TemplateInstance> templateInstances;
+
     if(this->config.contains("endpoint") && this->config["endpoint"].is_object()) {
         this->endpoint = EndpointConfig(this->config["endpoint"]);
     }
@@ -22,6 +26,38 @@ Config::Config(std::string path) {
         nlohmann::json::iterator it;
         for(it = jsonResources.begin(); it != jsonResources.end(); it++) {
             this->resources.push_back(ResourceConfig(*it));
+        }
+    }
+    
+    if(this->config.contains("templates") && this->config["templates"].is_array()) {
+        nlohmann::json jsonTemplates = this->config["templates"];
+        nlohmann::json::iterator it;
+        for(it = jsonTemplates.begin(); it != jsonTemplates.end(); it++) {
+            templates.push_back(TemplateConfig(*it));
+        }
+    }
+    
+    if(this->config.contains("template-instances") && this->config["template-instances"].is_array()) {
+        nlohmann::json jsonInstances = this->config["template-instances"];
+        nlohmann::json::iterator it;
+        for(it = jsonInstances.begin(); it != jsonInstances.end(); it++) {
+            templateInstances.push_back(TemplateInstance(*it));
+        }
+    }
+
+    if(templateInstances.size()) {
+        std::list<TemplateInstance>::iterator it = templateInstances.begin();
+        for(; it != templateInstances.end(); it++) {
+            std::list<TemplateConfig>::iterator tit = templates.begin();
+            for(; tit != templates.end(); tit++) {
+                if(tit->templateIdent == it->templateId) {
+                    tit->GenerateResources(this->resources, *it);
+                    break;
+                }
+            }
+            if (tit == templates.end()) {
+                throw std::runtime_error("Could not find desired template identifier: " + it->templateId);
+            }
         }
     }
 }
@@ -98,5 +134,112 @@ ResourceMethodConfig::ResourceMethodConfig(nlohmann::json &_json, ResourceMethod
     }
     if(_json.contains("cmd") && _json["cmd"].is_string()) {
         this->cmd = _json["cmd"];
+    }
+}
+
+TemplateInstance::TemplateInstance(nlohmann::json &_json) {
+    if(_json.contains("template") && _json["template"].is_string()) {
+        this->templateId = _json["template"];
+    } else {
+        throw std::runtime_error("ERROR: Resource does not include resource path!");
+    }
+    
+    if(_json.contains("template-args") && _json["template-args"].is_array()) {
+        nlohmann::json args = _json["template-args"];
+        nlohmann::json::iterator it;
+        for(it = args.begin(); it != args.end(); it++) {
+            if(it->is_string()) {
+                this->templateArgs.push_back(*it);
+            } else {
+                throw std::runtime_error("ERROR: Template instance argument is not a string!");
+            }
+        }
+    } else {
+        throw std::runtime_error("ERROR: Template instance does not include arguemnts!");
+    }
+}
+
+TemplateConfig::TemplateConfig(nlohmann::json &_json) {
+    if(_json.contains("name") && _json["name"].is_string()) {
+        this->templateName = _json["name"];
+    }
+
+    if(_json.contains("ident") && _json["ident"].is_string()) {
+        this->templateIdent = _json["ident"];
+    } else {
+        throw std::runtime_error("ERROR: Template config does not include identifier!");
+    }
+
+    if(_json.contains("resources") && _json["resources"].is_array()) {
+        nlohmann::json resources = _json["resources"];
+        nlohmann::json::iterator it;
+        for(it = resources.begin(); it != resources.end(); it++) {
+            if(it->is_object()) {
+                this->resources.push_back(ResourceConfig(*it));
+            } else {
+                throw std::runtime_error("ERROR: Template resource config item is not an object!");
+            }
+        }
+    } else {
+        throw std::runtime_error("ERROR: Template config does not contain resources!");
+    }
+}
+
+static std::string _TemplateReplace(std::string in, TemplateInstance &_instance) {
+    std::ostringstream out;
+    for(size_t i = 0; i < in.size(); i++) {
+        if(in[i] == '$') {
+            i++;
+            if(in[i] == '$') {
+                out << in[i];
+            } else if(isdigit(in[i])) {
+                size_t idx = 0;
+                while(isdigit(in[i])) {
+                    idx = (idx * 10) + (in[i] - '0');
+                    i++;
+                }
+                i--;
+                if(idx > _instance.templateArgs.size()) {
+                    throw std::runtime_error("ERROR: Template instance does not have enough arguments for template string: `" + in + "`!");
+                } else if(idx == 0) {
+                    throw std::runtime_error("ERROR: Template string argument specifier cannot be zero: `" + in + "`!");
+                } else {
+                    out << *std::next(_instance.templateArgs.begin(), idx - 1);
+                }
+            } else {
+                throw std::runtime_error("ERROR: Improperly formatted template string: `" + in + "`!");
+            }
+        } else {
+            out << in[i];
+        }
+    }
+    return out.str();
+}
+
+void TemplateConfig::GenerateResources(std::list<ResourceConfig> &_resources, TemplateInstance &_instance) {
+    std::list<ResourceConfig>::iterator it = this->resources.begin();
+    for(; it != this->resources.end(); it++) {
+        ResourceConfig res;
+        res.resourceName = _TemplateReplace(it->resourceName, _instance);
+        res.resourcePath = _TemplateReplace(it->resourcePath, _instance);
+        res.logFile      = _TemplateReplace(it->logFile,      _instance);
+        res.initialValue = _TemplateReplace(it->initialValue, _instance);
+        res.maxAge       = it->maxAge;
+        res.observable   = it->observable;
+
+        std::list<ResourceMethodConfig>::iterator mit = it->methods.begin();
+        for(; mit != it->methods.end(); mit++) {
+            ResourceMethodConfig meth;
+            meth.type       = mit->type;
+            meth.format     = _TemplateReplace(mit->format, _instance);
+            meth.printValue = mit->printValue;
+            meth.logValue   = mit->logValue;
+            meth.store      = mit->store;
+            meth.cmd        = _TemplateReplace(mit->cmd, _instance);
+
+            res.methods.push_back(meth);
+        }
+
+        _resources.push_back(res);
     }
 }

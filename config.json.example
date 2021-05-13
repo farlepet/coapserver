@@ -44,5 +44,39 @@
                 }
             }
         }
+    ],
+    "templates": [
+        {
+            "name":  "Exmaple Template",
+            "ident": "example",
+            "resources": [
+                {
+                    "name": "$1 Resource",
+                    "path": "device/$2",
+                    "logfile": "logs/$1.log",
+                    "methods": {
+                        "POST": {
+                            "format": "$3",
+                            "print":  true,
+                            "log":    true
+                        }
+                    }
+                }
+            ],
+            "args": [
+                "Common Name",
+                "Device ID"
+            ]
+        }
+    ],
+    "template-instances": [
+        {
+            "template": "example",
+            "template-args": [ "test_device_1", "12345", "MSGPACK" ]
+        },
+        {
+            "template": "example",
+            "template-args": [ "test_device_2", "76543", "MSGPACK" ]
+        }
     ]
 }

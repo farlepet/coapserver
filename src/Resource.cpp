@@ -1,4 +1,5 @@
 #include <iostream>
+#include <filesystem>
 
 #include "Resource.hpp"
 
@@ -13,6 +14,10 @@ config(_config) {
         this->methods.push_back(ResourceMethod(*this, *it));
         if(it->logValue && !this->logFile.is_open()) {
             if(this->config.logFile.size()) {
+                if(this->config.logFile.find(std::filesystem::path::preferred_separator) != std::string::npos) {
+                    /* File is nested in a directory, make sure it exists. */
+                    std::filesystem::create_directories(std::filesystem::path(this->config.logFile).parent_path());
+                }
                 this->logFile.open(this->config.logFile, std::fstream::out | std::fstream::app);
                 if(this->logFile.fail()) {
                     throw std::runtime_error("Failed to open log file " + this->config.logFile + " for resource " + this->config.resourcePath);

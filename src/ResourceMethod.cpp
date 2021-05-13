@@ -40,7 +40,7 @@ void ResourceMethod::methodHandler(coap_pdu_t *request, coap_pdu_t *response, st
             coap_add_option(response, COAP_OPTION_CONTENT_FORMAT,
                             coap_encode_var_safe(buf, 16, COAP_MEDIATYPE_TEXT_PLAIN), buf);
             coap_add_option(response, COAP_OPTION_MAXAGE,
-                            coap_encode_var_safe(buf, 16, 60), buf);
+                            coap_encode_var_safe(buf, 16, 1200), buf);
             strncpy((char *)buf, path.c_str(), 255);
             coap_add_option(response, COAP_OPTION_URI_PATH, strlen((char *)buf), buf);
 
@@ -66,7 +66,7 @@ void ResourceMethod::methodHandler(coap_pdu_t *request, coap_pdu_t *response, st
     /* TODO: Handle indentation of multi-line output, possibly print a
      * timestamp on each line. */
     logValue += timebuf;
-    logValue += " | " + this->methText[this->config.type];
+    logValue += " | " + this->parentResource.getPath() + ":" + this->methText[this->config.type];
     if(ss.str().size()) {
         logValue += ": " + ss.str();
     }

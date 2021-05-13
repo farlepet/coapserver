@@ -55,6 +55,34 @@ struct ResourceConfig {
     ResourceConfig() {};
 };
 
+struct TemplateInstance {
+    /** Identifier of template to use */
+    std::string templateId = "";
+    /** Arguments to give template */
+    std::list<std::string> templateArgs;
+
+    TemplateInstance(nlohmann::json &_json);
+    TemplateInstance() {};
+};
+
+struct TemplateConfig {
+    /** Name of template */
+    std::string templateName  = "";
+    /** Identifier of template, used in resource */
+    std::string templateIdent = "";
+
+    /** Resource templates */
+    std::list<ResourceConfig> resources;
+
+    /** Argument names */
+    std::list<std::string>    args;
+
+    TemplateConfig(nlohmann::json &_json);
+    TemplateConfig() {};
+
+    void GenerateResources(std::list<ResourceConfig> &_resources, TemplateInstance &_instance);
+};
+
 struct EndpointConfig {
     /** Address to bind on */
     std::string address = "0.0.0.0";
