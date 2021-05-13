@@ -43,6 +43,8 @@ class Resource {
         std::string getValue();
 
         std::string getPath();
+
+        unsigned    getMaxAge();
 };
 
 #endif /* _RESOURCE_HPP_ */
