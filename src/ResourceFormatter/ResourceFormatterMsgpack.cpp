@@ -18,10 +18,14 @@ int ResourceFormatterMsgpack::decode(const coap_pdu_t *pdu, std::ostream &out) {
     if(!coap_get_data(pdu, &len, &data)) {
         return -1;
     }
-    
-    msgpack::object_handle oh = msgpack::unpack((const char *)data, len);
 
-    out << oh.get();
+    try {
+        msgpack::object_handle oh = msgpack::unpack((const char *)data, len);
+    
+        out << oh.get();
+    } catch(msgpack::insufficient_bytes e) {
+        out << "ERROR: msgpack::unpack threw msgpack::insufficient_bytes: " << e.what() << " (" << len << ")";
+    }
 
     return 0;
 }

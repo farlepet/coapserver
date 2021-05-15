@@ -17,6 +17,7 @@ Current Features:
  - Templated resource configuration for creating multiple similar resources
 
 Planned Features:
+ - Support multi-packet messages
  - Ability to select config file from command-line flags
  - Improved documentation
  - Run commands with request data
