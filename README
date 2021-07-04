@@ -24,3 +24,9 @@ Planned Features:
  - Set a resource's value from an external program
  - Encoding responses to a GET request
  - Possibly listen to any resource that follows a given format
+
+Requirements:
+ - g++/clang++
+ - make
+ - libcoap: https://github.com/obgm/libcoap
+ - boost: https://www.boost.org/
