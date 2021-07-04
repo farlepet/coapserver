@@ -17,7 +17,7 @@ int ResourceFormatterMsgpack::decode(const std::vector<uint8_t> &data, std::ostr
         msgpack::object_handle oh = msgpack::unpack((const char *)data.data(), data.size());
     
         out << oh.get();
-    } catch(msgpack::insufficient_bytes e) {
+    } catch(msgpack::insufficient_bytes &e) {
         out << "ERROR: msgpack::unpack threw msgpack::insufficient_bytes: " << e.what() << " (" << data.size() << ")";
     }
 
