@@ -20,7 +20,9 @@ parentResource(_parentResource) {
     this->methText[ResourceMethodType::iPATCH]  = "iPATCH";
 }
 
-void ResourceMethod::methodHandler(coap_pdu_t *request, coap_pdu_t *response, std::ostream &log) {
+void ResourceMethod::methodHandler(coap_pdu_t *request, coap_pdu_t *response, std::vector<uint8_t> &data, std::ostream &log) {
+    (void)request; /* Not currently used */
+
     uint8_t buf[256];
     
     /* TODO: Allow selecting time format */
@@ -51,7 +53,7 @@ void ResourceMethod::methodHandler(coap_pdu_t *request, coap_pdu_t *response, st
         case ResourceMethodType::PUT:
         case ResourceMethodType::POST:
             if(this->fmt) {
-                this->fmt->decode(request, ss);
+                this->fmt->decode(data, ss);
                 if(this->config.store) {
                     this->parentResource.setValue(ss.str());
                 }

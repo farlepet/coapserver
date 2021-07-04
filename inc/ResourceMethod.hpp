@@ -27,7 +27,7 @@ class ResourceMethod {
     public:
         ResourceMethod(Resource &_parentResource, ResourceMethodConfig &_config);
         
-        void methodHandler(coap_pdu_t *request, coap_pdu_t *response, std::ostream &log);
+        void methodHandler(coap_pdu_t *request, coap_pdu_t *response, std::vector<std::uint8_t> &data, std::ostream &log);
 
         ResourceMethodType getMethodType();
 };

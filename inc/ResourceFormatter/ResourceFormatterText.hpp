@@ -9,7 +9,7 @@ class ResourceFormatterText : public ResourceFormatter {
     public:
         ResourceFormatterText();
 
-        int decode(const coap_pdu_t *pdu, std::ostream &out);
+        int decode(const std::vector<uint8_t> &data, std::ostream &out);
 };
 
 #endif /* _RESOURCE_FORMATTER_TEXT_H */

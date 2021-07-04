@@ -12,19 +12,13 @@ ResourceFormatterMsgpack::ResourceFormatterMsgpack() {
 
 }
 
-int ResourceFormatterMsgpack::decode(const coap_pdu_t *pdu, std::ostream &out) {
-    uint8_t *data;
-    size_t   len;
-    if(!coap_get_data(pdu, &len, &data)) {
-        return -1;
-    }
-
+int ResourceFormatterMsgpack::decode(const std::vector<uint8_t> &data, std::ostream &out) {
     try {
-        msgpack::object_handle oh = msgpack::unpack((const char *)data, len);
+        msgpack::object_handle oh = msgpack::unpack((const char *)data.data(), data.size());
     
         out << oh.get();
     } catch(msgpack::insufficient_bytes e) {
-        out << "ERROR: msgpack::unpack threw msgpack::insufficient_bytes: " << e.what() << " (" << len << ")";
+        out << "ERROR: msgpack::unpack threw msgpack::insufficient_bytes: " << e.what() << " (" << data.size() << ")";
     }
 
     return 0;

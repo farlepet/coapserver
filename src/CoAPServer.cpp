@@ -43,10 +43,18 @@ int CoAPServer::start() {
         }
     }
 
+    if(!ret) {
+        coap_context_set_block_mode(this->ctx, COAP_BLOCK_USE_LIBCOAP);
+        const uint16_t cache_ignore_options[] = { COAP_OPTION_BLOCK1,
+                                                  COAP_OPTION_BLOCK1,
+                                                  COAP_OPTION_MAXAGE,
+                                                  COAP_OPTION_IF_NONE_MATCH };
+        coap_cache_ignore_options(this->ctx, cache_ignore_options, sizeof(cache_ignore_options) / sizeof(cache_ignore_options[0]));
+    }
+
     while(!ret) {
         /* TODO: Spawn thread */
         coap_io_process(this->ctx, COAP_IO_WAIT);
-
     }
 
     coap_free_context(ctx);

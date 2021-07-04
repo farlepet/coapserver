@@ -46,15 +46,15 @@ int Resource::attach(coap_context_t *ctx) {
         switch(it->getMethodType()) {
             case ResourceMethodType::GET:
                 std::cerr << "  - Attaching GET handler" << std::endl;
-                coap_register_handler(this->res, COAP_REQUEST_GET, Resource::coapHandlerGet);
+                coap_register_handler(this->res, COAP_REQUEST_GET, Resource::coapHandlerX<ResourceMethodType::GET>);
                 break;
             case ResourceMethodType::POST:
                 std::cerr << "  - Attaching POST handler" << std::endl;
-                coap_register_handler(this->res, COAP_REQUEST_POST, Resource::coapHandlerPost);
+                coap_register_handler(this->res, COAP_REQUEST_POST, Resource::coapHandlerX<ResourceMethodType::POST>);
                 break;
             case ResourceMethodType::PUT:
                 std::cerr << "  - Attaching PUT handler" << std::endl;
-                coap_register_handler(this->res, COAP_REQUEST_PUT, Resource::coapHandlerPut);
+                coap_register_handler(this->res, COAP_REQUEST_PUT, Resource::coapHandlerX<ResourceMethodType::PUT>);
                 break;
             default:
                 std::cerr << "ERROR: Resource::attach: Unhandled ResourceMethodType." << std::endl;
@@ -68,13 +68,24 @@ int Resource::attach(coap_context_t *ctx) {
     return 0;
 }
 
-void Resource::handleCoAPRequest(coap_pdu_t *request, coap_pdu_t *response, ResourceMethodType method) {
-    /* TODO: This is not a great way to do this */
-    std::list<ResourceMethod>::iterator it = this->methods.begin();
-    for(; it != this->methods.end(); it++) {
-        if(it->getMethodType() == method) {
-            it->methodHandler(request, response, this->logFile);
-            break;
+void Resource::handleCoAPRequest(coap_pdu_t *request, coap_pdu_t *response, coap_session_t *session, ResourceMethodType method) {
+    std::vector<uint8_t> data;
+
+    int ret = this->sessionGetData(request, response, session, data);
+    if(ret == 0) {
+        /* Waiting on more data */
+        response->code = COAP_RESPONSE_CODE_CONTINUE;
+    } else if(ret < 0) {
+        /* Error */
+        response->code = COAP_RESPONSE_CODE_INTERNAL_ERROR;
+    } else {
+        /* Data complete */
+        std::list<ResourceMethod>::iterator it = this->methods.begin();
+        for(; it != this->methods.end(); it++) {
+            if(it->getMethodType() == method) {
+                it->methodHandler(request, response, data, this->logFile);
+                break;
+            }
         }
     }
 }
@@ -98,37 +109,90 @@ unsigned Resource::getMaxAge() {
     return this->config.maxAge;
 }
 
-void Resource::coapHandlerGet(coap_context_t *context, coap_resource_t *resource, coap_session_t *session,
-                              coap_pdu_t *request, coap_binary_t *token, coap_string_t *query,
-                              coap_pdu_t *response) {
-    (void)context;
-    (void)resource;
-    (void)session;
-    (void)token;
-    (void)query;
-
-    Resource *res = (Resource *)coap_resource_get_userdata(resource);
-
-    res->handleCoAPRequest(request, response, ResourceMethodType::GET);
+static void
+_cache_free_app_data(void *data) {
+    delete (std::vector<uint8_t> *)data;
 }
 
-void Resource::coapHandlerPost(coap_context_t *context, coap_resource_t *resource, coap_session_t *session,
-                               coap_pdu_t *request, coap_binary_t *token, coap_string_t *query,
-                               coap_pdu_t *response) {
-    (void)context;
-    (void)resource;
-    (void)session;
-    (void)token;
-    (void)query;
+int Resource::sessionGetData(coap_pdu_t *request, coap_pdu_t *response, coap_session_t *session, std::vector<uint8_t> &dataOut) {
+    size_t         size;
+    size_t         offset;
+    size_t         total;
+    const uint8_t *data;
 
-    Resource *res = (Resource *)coap_resource_get_userdata(resource);
+    std::vector<uint8_t> *data_so_far;
 
-    res->handleCoAPRequest(request, response, ResourceMethodType::POST);
+    /* Handle block-wise transfers
+     *   Heavily based off of https://github.com/obgm/libcoap/blob/develop/examples/coap-server.c */
+    if(coap_get_data_large(request, &size, &data, &offset, &total) &&
+       size != total) {
+        std::cerr << "BigData: Sz: " << size << ", Off: " << offset << ", Tot: " << total << std::endl;
+        coap_cache_entry_t *cache_entry = coap_cache_get_by_pdu(session, request, COAP_CACHE_IS_SESSION_BASED);
+
+        if(!cache_entry) {
+            if(offset != 0) {
+                std::cerr << "CoAP cache entry NULL on non-first block for '" << this->getPath() << "'!" << std::endl;
+                return -1;
+            } else {
+                cache_entry = coap_new_cache_entry(session, request, COAP_CACHE_NOT_RECORD_PDU, COAP_CACHE_IS_SESSION_BASED, 0);
+                if(cache_entry == NULL) {
+                    std::cerr << "Could not create CoAP cache entry for '" << this->getPath() << "'!" << std::endl;
+                    return 1;
+                }
+                data_so_far = new std::vector<uint8_t>;
+                if(data_so_far == NULL) {
+                    std::cerr << "Could not create blockwise data buffer for '" << this->getPath() << "'!" << std::endl;
+                    return -1;
+                }
+                coap_cache_set_app_data(cache_entry, data_so_far, _cache_free_app_data);
+            }
+        } else if(offset == 0) {
+            data_so_far = (std::vector<uint8_t> *)coap_cache_get_app_data(cache_entry);
+            if(data_so_far) {
+                data_so_far->clear();
+            } else {
+                data_so_far = new std::vector<uint8_t>;
+                if(data_so_far == NULL) {
+                    std::cerr << "Could not create blockwise data buffer for '" << this->getPath() << "'!" << std::endl;
+                    return -1;
+                }
+                coap_cache_set_app_data(cache_entry, data_so_far, _cache_free_app_data);
+            }
+        }
+
+        if(size) {
+            data_so_far = (std::vector<uint8_t> *)coap_cache_get_app_data(cache_entry);
+            //data_so_far = coap_block_build_body(data_so_far, size, data, offset, total);
+            /* TODO: Support re-retransmissions, if necessary. */
+            data_so_far->insert(data_so_far->end(), data, data + size);
+        }
+
+        if((offset + size) == total) {
+            /* We've gathered all blocks */
+            data_so_far = (std::vector<uint8_t> *)coap_cache_get_app_data(cache_entry);
+            coap_cache_set_app_data(cache_entry, NULL, NULL);
+            dataOut.clear();
+            dataOut = *data_so_far;
+            
+            return 1;
+        }
+    } else {
+        std::cerr << "SmallData: Sz: " << size << ", Off: " << offset << ", Tot: " << total << std::endl;
+        /* Single-block transfer */
+        dataOut.clear();
+        dataOut.insert(dataOut.end(), data, data + size);
+
+        return 1;
+    }
+
+    return 0;
 }
 
-void Resource::coapHandlerPut(coap_context_t *context, coap_resource_t *resource, coap_session_t *session,
-                              coap_pdu_t *request, coap_binary_t *token, coap_string_t *query,
-                              coap_pdu_t *response) {
+
+template<ResourceMethodType T>
+void Resource::coapHandlerX(coap_context_t *context, coap_resource_t *resource, coap_session_t *session,
+                            coap_pdu_t *request, coap_binary_t *token, coap_string_t *query,
+                            coap_pdu_t *response) {
     (void)context;
     (void)resource;
     (void)session;
@@ -137,5 +201,5 @@ void Resource::coapHandlerPut(coap_context_t *context, coap_resource_t *resource
 
     Resource *res = (Resource *)coap_resource_get_userdata(resource);
 
-    res->handleCoAPRequest(request, response, ResourceMethodType::PUT);
+    res->handleCoAPRequest(request, response, session, T);
 }
