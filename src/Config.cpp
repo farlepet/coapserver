@@ -141,7 +141,7 @@ TemplateInstance::TemplateInstance(nlohmann::json &_json) {
     if(_json.contains("template") && _json["template"].is_string()) {
         this->templateId = _json["template"];
     } else {
-        throw std::runtime_error("ERROR: Resource does not include resource path!");
+        throw std::runtime_error("ERROR: Template instance does not include template identifier!");
     }
     
     if(_json.contains("template-args") && _json["template-args"].is_array()) {
