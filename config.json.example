@@ -6,10 +6,11 @@
     "resources": [
         {
             "name": "Example Resource 1",
-            "play": "example/res1",
+            "path": "example/res1",
             "value": "12345",
             "observable": true,
             "maxage": 240,
+            "logfile": "logs/res1.log",
             "methods": {
                 "GET": {
                     "format": "STRING",
@@ -31,6 +32,7 @@
         {
             "name": "Example Resource 2",
             "path": "example/res2",
+            "logfile": "logs/res2.log",
             "methods": {
                 "PUT": {
                     "format": "HEX",
