@@ -6,7 +6,7 @@ CXXSRC	= $(wildcard $(SRC)/*.cpp) $(wildcard $(SRC)/*/*.cpp)
 OBJ		= $(patsubst %.cpp,%.o,$(CXXSRC))
 EXEC	= coap_server
 
-CXXFLAGS	= -I$(INC) -Wall -Wextra -Werror -std=c++17 -g
+CXXFLAGS	= -I$(INC) -Wall -Wextra -Werror -std=c++17 -O2
 LDFLAGS		= -lcoap-2-gnutls -lboost_program_options
 
 all: $(OBJ)
