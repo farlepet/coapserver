@@ -115,6 +115,8 @@ _cache_free_app_data(void *data) {
 }
 
 int Resource::sessionGetData(coap_pdu_t *request, coap_pdu_t *response, coap_session_t *session, std::vector<uint8_t> &dataOut) {
+    (void)response;
+    
     size_t         size;
     size_t         offset;
     size_t         total;
@@ -126,7 +128,6 @@ int Resource::sessionGetData(coap_pdu_t *request, coap_pdu_t *response, coap_ses
      *   Heavily based off of https://github.com/obgm/libcoap/blob/develop/examples/coap-server.c */
     if(coap_get_data_large(request, &size, &data, &offset, &total) &&
        size != total) {
-        std::cerr << "BigData: Sz: " << size << ", Off: " << offset << ", Tot: " << total << std::endl;
         coap_cache_entry_t *cache_entry = coap_cache_get_by_pdu(session, request, COAP_CACHE_IS_SESSION_BASED);
 
         if(!cache_entry) {
@@ -177,7 +178,6 @@ int Resource::sessionGetData(coap_pdu_t *request, coap_pdu_t *response, coap_ses
             return 1;
         }
     } else {
-        std::cerr << "SmallData: Sz: " << size << ", Off: " << offset << ", Tot: " << total << std::endl;
         /* Single-block transfer */
         dataOut.clear();
         dataOut.insert(dataOut.end(), data, data + size);
