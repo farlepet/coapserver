@@ -7,7 +7,7 @@ OBJ		= $(patsubst %.cpp,%.o,$(CXXSRC))
 EXEC	= coap_server
 
 CXXFLAGS	= -I$(INC) -Wall -Wextra -Werror -std=c++17 -g
-LDFLAGS		= -lcoap-2-gnutls
+LDFLAGS		= -lcoap-2-gnutls -lboost_program_options
 
 all: $(OBJ)
 	@echo -e "\033[33m  \033[1mLD\033[21m    \033[34m$(EXEC)\033[0m"

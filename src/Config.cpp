@@ -9,7 +9,7 @@
 Config::Config(std::string path) {
     std::ifstream in(path);
     if(in.fail()) {
-        throw std::runtime_error("Could not open config file " + path + "for reading!");
+        throw std::runtime_error("Could not open config file '" + path + "' for reading!");
     }
 
     in >> this->config;
