@@ -1,5 +1,6 @@
 coap_server
 *.o
+*.d
 *.log
 config.json
 .vscode
