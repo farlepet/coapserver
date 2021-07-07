@@ -71,21 +71,25 @@ int Resource::attach(coap_context_t *ctx) {
 void Resource::handleCoAPRequest(coap_pdu_t *request, coap_pdu_t *response, coap_session_t *session, ResourceMethodType method) {
     std::vector<uint8_t> data;
 
-    int ret = this->sessionGetData(request, response, session, data);
-    if(ret == 0) {
-        /* Waiting on more data */
-        response->code = COAP_RESPONSE_CODE_CONTINUE;
-    } else if(ret < 0) {
-        /* Error */
-        response->code = COAP_RESPONSE_CODE_INTERNAL_ERROR;
-    } else {
-        /* Data complete */
-        std::list<ResourceMethod>::iterator it = this->methods.begin();
-        for(; it != this->methods.end(); it++) {
-            if(it->getMethodType() == method) {
-                it->methodHandler(request, response, data, this->logFile);
-                break;
-            }
+    if(method == ResourceMethodType::PUT ||
+       method == ResourceMethodType::POST) {
+        int ret = this->sessionGetData(request, response, session, data);
+        if(ret == 0) {
+            /* Waiting on more data */
+            response->code = COAP_RESPONSE_CODE_CONTINUE;
+            return;
+        } else if(ret < 0) {
+            /* Error */
+            response->code = COAP_RESPONSE_CODE_INTERNAL_ERROR;
+            return;
+        }
+    }
+
+    std::list<ResourceMethod>::iterator it = this->methods.begin();
+    for(; it != this->methods.end(); it++) {
+        if(it->getMethodType() == method) {
+            it->methodHandler(request, response, data, this->logFile);
+            break;
         }
     }
 }
