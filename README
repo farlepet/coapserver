@@ -29,4 +29,5 @@ Requirements:
  - g++/clang++
  - make
  - libcoap: https://github.com/obgm/libcoap
+ - nlohmann JSON: https://github.com/nlohmann/json
  - boost: https://www.boost.org/
