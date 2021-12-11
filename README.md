@@ -1,5 +1,5 @@
 Coap Server
------------
+===========
 
 This CoAP server is designed to be highly configurable to allow it's use with a
 variety of IoT devices, for testing or for low-scale use.
@@ -10,9 +10,9 @@ Current Features:
     - PUT,POST: Print the sent data, and/or set the current value of the resource
  - Resource observation
  - Multiple data format support
-    - MSGPACK
-    - Plaintext
-    - Raw data represented as hex
+    - `MSGPACK` - Decode data as MSGPACK
+    - `STRING` - Plaintext
+    - `HEX` - Raw data represented as hex
  - Logging to a separate file for each resource
  - Templated resource configuration for creating multiple similar resources
  - Multi-block requests
@@ -26,8 +26,8 @@ Planned Features:
  - Possibly listen to any resource that follows a given format
 
 Requirements:
- - g++/clang++
- - make
+ - `g++`/`clang++`
+ - `make`
  - libcoap: https://github.com/obgm/libcoap
  - nlohmann JSON: https://github.com/nlohmann/json
  - boost: https://www.boost.org/
