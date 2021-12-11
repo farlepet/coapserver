@@ -11,9 +11,6 @@ int ResourceFormatterHex::decode(const std::vector<uint8_t> &data, std::ostream 
     out << std::uppercase << std::hex << std::setfill('0') << std::setw(2);
     
     for(size_t i = 0; i < data.size(); i++) {
-        if(!(i % 40)) {
-            out << std::endl << "    ";
-        }
         out << (int)data[i];
     }
 
