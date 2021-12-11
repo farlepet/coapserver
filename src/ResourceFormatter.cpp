@@ -6,6 +6,10 @@
 ResourceFormatter::ResourceFormatter() {
 
 }
+        
+ResourceFormatter::~ResourceFormatter() {
+
+}
 
 ResourceFormatter *ResourceFormatter::createResourceFormatter(std::string &_format) {
     if(_format == "STRING") {

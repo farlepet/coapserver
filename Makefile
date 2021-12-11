@@ -10,9 +10,12 @@ EXEC	= coap_server
 CXXFLAGS	= -I$(INC) -Wall -Wextra -Werror -std=c++17 -O2
 LDFLAGS		= -lcoap-2-gnutls -lboost_program_options
 
-ifeq ($(CXX), "clang++")
+ifeq ($(CXX), clang++)
   CXXFLAGS += -Weverything \
-              -Wno-c++98-compat
+              -Wno-c++98-compat \
+			  -Wno-reserved-identifier \
+			  -Wno-reserved-macro-identifier \
+			  -Wno-padded
 endif
 
 .PHONY: all, clean

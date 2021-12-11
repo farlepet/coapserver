@@ -4,16 +4,18 @@
 #include "Config.hpp"
 #include "CoAPServer.hpp"
 
-static struct {
+typedef struct {
     std::string configPath;
     std::string portOverride;
     std::string addrOverride;
-} _options;
+} options_t;
 
-static int _handleCmdLine(int, char **);
+static int _handleCmdLine(int, char **, options_t &);
 
 int main(int argc, char **argv) {
-    int ret = _handleCmdLine(argc, argv);
+    options_t options;
+
+    int ret = _handleCmdLine(argc, argv, options);
     if(ret) {
         if (ret > 0) {
             /* Non-error exit case */
@@ -23,21 +25,21 @@ int main(int argc, char **argv) {
         }
     }
 
-    Config conf(_options.configPath);
+    Config conf(options.configPath);
 
-    if(_options.portOverride.size()) {
+    if(options.portOverride.size()) {
         /* TODO: Check for non-numerical characters */
-        int port = std::stoi(_options.portOverride);
+        int port = std::stoi(options.portOverride);
         if((port <= 0) ||
            (port >  65535)) {
             std::cerr << "Port must be an integer between 1 and 65536 (inclusive)" << std::endl;
             return 1;
         }
-        conf.getEndpoint().port = _options.portOverride;
+        conf.getEndpoint().port = options.portOverride;
     }
-    if(_options.addrOverride.size()) {
+    if(options.addrOverride.size()) {
         /* TODO: Check address format */
-        conf.getEndpoint().address = _options.addrOverride;
+        conf.getEndpoint().address = options.addrOverride;
     }
 
     CoAPServer coap(conf);
@@ -49,7 +51,7 @@ int main(int argc, char **argv) {
 
 namespace po = boost::program_options;
 
-static int _handleCmdLine(int argc, char **argv) {
+static int _handleCmdLine(int argc, char **argv, options_t &_options) {
     po::options_description desc("Program options");
 
     /* TODO: Clean this up if more options are added. */

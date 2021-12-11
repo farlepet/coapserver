@@ -32,7 +32,7 @@ struct ResourceMethodConfig {
     std::string            cmd        = "";
 
     ResourceMethodConfig(nlohmann::json &_json, ResourceMethodType _type);
-    ResourceMethodConfig() {};
+    ResourceMethodConfig() {}
 };
 
 struct ResourceConfig {
@@ -52,7 +52,7 @@ struct ResourceConfig {
     std::list<ResourceMethodConfig> methods;
 
     ResourceConfig(nlohmann::json &_json);
-    ResourceConfig() {};
+    ResourceConfig() {}
 };
 
 struct TemplateInstance {
@@ -62,7 +62,7 @@ struct TemplateInstance {
     std::list<std::string> templateArgs;
 
     TemplateInstance(nlohmann::json &_json);
-    TemplateInstance() {};
+    TemplateInstance() {}
 };
 
 struct TemplateConfig {
@@ -78,7 +78,7 @@ struct TemplateConfig {
     std::list<std::string>    args;
 
     TemplateConfig(nlohmann::json &_json);
-    TemplateConfig() {};
+    TemplateConfig() {}
 
     void GenerateResources(std::list<ResourceConfig> &_resources, TemplateInstance &_instance);
 };
@@ -90,7 +90,7 @@ struct EndpointConfig {
     std::string port    = "5683";
 
     EndpointConfig(nlohmann::json &_json);
-    EndpointConfig() {};
+    EndpointConfig() {}
 };
 
 class Config {

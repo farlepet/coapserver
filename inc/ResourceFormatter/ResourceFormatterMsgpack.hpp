@@ -9,7 +9,7 @@ class ResourceFormatterMsgpack : public ResourceFormatter {
     public:
         ResourceFormatterMsgpack();
 
-        int decode(const std::vector<uint8_t> &data, std::ostream &out);
+        int decode(const std::vector<uint8_t> &data, std::ostream &out) override;
 };
 
 #endif /* _RESOURCE_FORMATTER_MSGPACK_H */

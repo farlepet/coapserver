@@ -81,7 +81,7 @@ int CoAPServer::resolveAddress(std::string host, std::string service, coap_addre
         return error;
     }
 
-    for (ainfo = res; ainfo != NULL; ainfo = ainfo->ai_next) {
+    for (ainfo = res; ainfo != nullptr; ainfo = ainfo->ai_next) {
         if ((ainfo->ai_family == AF_INET) ||
             (ainfo->ai_family == AF_INET6)) {
             addr.size = ainfo->ai_addrlen;
@@ -91,5 +91,5 @@ int CoAPServer::resolveAddress(std::string host, std::string service, coap_addre
     }
 
     freeaddrinfo(res);
-    return addr.size;
+    return static_cast<int>(addr.size);
 }

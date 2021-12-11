@@ -14,7 +14,7 @@ ResourceFormatterMsgpack::ResourceFormatterMsgpack() {
 
 int ResourceFormatterMsgpack::decode(const std::vector<uint8_t> &data, std::ostream &out) {
     try {
-        msgpack::object_handle oh = msgpack::unpack((const char *)data.data(), data.size());
+        msgpack::object_handle oh = msgpack::unpack(reinterpret_cast<const char *>(data.data()), data.size());
     
         out << oh.get();
     } catch(msgpack::insufficient_bytes &e) {

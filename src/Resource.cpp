@@ -40,7 +40,7 @@ int Resource::attach(coap_context_t *ctx) {
         coap_resource_set_get_observable(this->res, 1);
     }
 
-    coap_resource_set_userdata(this->res, (void *)this);
+    coap_resource_set_userdata(this->res, this);
     std::list<ResourceMethod>::iterator it = this->methods.begin();
     for(; it != this->methods.end(); it++) {
         switch(it->getMethodType()) {
@@ -56,7 +56,11 @@ int Resource::attach(coap_context_t *ctx) {
                 std::cerr << "  - Attaching PUT handler" << std::endl;
                 coap_register_handler(this->res, COAP_REQUEST_PUT, Resource::coapHandlerX<ResourceMethodType::PUT>);
                 break;
-            default:
+            case ResourceMethodType::DELETE:
+            case ResourceMethodType::FETCH:
+            case ResourceMethodType::PATCH:
+            case ResourceMethodType::iPATCH:
+            case ResourceMethodType::None:
                 std::cerr << "ERROR: Resource::attach: Unhandled ResourceMethodType." << std::endl;
                 return 1;
         }
@@ -96,7 +100,7 @@ void Resource::handleCoAPRequest(coap_pdu_t *request, coap_pdu_t *response, coap
 
 void Resource::setValue(std::string _value) {
     if(this->config.observable) {
-        coap_resource_notify_observers(this->res, NULL);
+        coap_resource_notify_observers(this->res, nullptr);
     }
     this->value = _value;
 }
@@ -115,7 +119,7 @@ unsigned Resource::getMaxAge() {
 
 static void
 _cache_free_app_data(void *data) {
-    delete (std::vector<uint8_t> *)data;
+    delete static_cast<std::vector<uint8_t> *>(data);
 }
 
 int Resource::sessionGetData(coap_pdu_t *request, coap_pdu_t *response, coap_session_t *session, std::vector<uint8_t> &dataOut) {
@@ -140,24 +144,24 @@ int Resource::sessionGetData(coap_pdu_t *request, coap_pdu_t *response, coap_ses
                 return -1;
             } else {
                 cache_entry = coap_new_cache_entry(session, request, COAP_CACHE_NOT_RECORD_PDU, COAP_CACHE_IS_SESSION_BASED, 0);
-                if(cache_entry == NULL) {
+                if(cache_entry == nullptr) {
                     std::cerr << "Could not create CoAP cache entry for '" << this->getPath() << "'!" << std::endl;
                     return 1;
                 }
                 data_so_far = new std::vector<uint8_t>;
-                if(data_so_far == NULL) {
+                if(data_so_far == nullptr) {
                     std::cerr << "Could not create blockwise data buffer for '" << this->getPath() << "'!" << std::endl;
                     return -1;
                 }
                 coap_cache_set_app_data(cache_entry, data_so_far, _cache_free_app_data);
             }
         } else if(offset == 0) {
-            data_so_far = (std::vector<uint8_t> *)coap_cache_get_app_data(cache_entry);
+            data_so_far = static_cast<std::vector<uint8_t> *>(coap_cache_get_app_data(cache_entry));
             if(data_so_far) {
                 data_so_far->clear();
             } else {
                 data_so_far = new std::vector<uint8_t>;
-                if(data_so_far == NULL) {
+                if(data_so_far == nullptr) {
                     std::cerr << "Could not create blockwise data buffer for '" << this->getPath() << "'!" << std::endl;
                     return -1;
                 }
@@ -166,16 +170,15 @@ int Resource::sessionGetData(coap_pdu_t *request, coap_pdu_t *response, coap_ses
         }
 
         if(size) {
-            data_so_far = (std::vector<uint8_t> *)coap_cache_get_app_data(cache_entry);
-            //data_so_far = coap_block_build_body(data_so_far, size, data, offset, total);
+            data_so_far = static_cast<std::vector<uint8_t> *>(coap_cache_get_app_data(cache_entry));
             /* TODO: Support re-retransmissions, if necessary. */
             data_so_far->insert(data_so_far->end(), data, data + size);
         }
 
         if((offset + size) == total) {
             /* We've gathered all blocks */
-            data_so_far = (std::vector<uint8_t> *)coap_cache_get_app_data(cache_entry);
-            coap_cache_set_app_data(cache_entry, NULL, NULL);
+            data_so_far = static_cast<std::vector<uint8_t> *>(coap_cache_get_app_data(cache_entry));
+            coap_cache_set_app_data(cache_entry, nullptr, nullptr);
             dataOut.clear();
             dataOut = *data_so_far;
             
@@ -203,7 +206,7 @@ void Resource::coapHandlerX(coap_context_t *context, coap_resource_t *resource, 
     (void)token;
     (void)query;
 
-    Resource *res = (Resource *)coap_resource_get_userdata(resource);
+    Resource *res = static_cast<Resource *>(coap_resource_get_userdata(resource));
 
     res->handleCoAPRequest(request, response, session, T);
 }

@@ -185,9 +185,9 @@ TemplateConfig::TemplateConfig(nlohmann::json &_json) {
     }
 
     if(_json.contains("resources") && _json["resources"].is_array()) {
-        nlohmann::json resources = _json["resources"];
+        nlohmann::json _resources = _json["resources"];
         nlohmann::json::iterator it;
-        for(it = resources.begin(); it != resources.end(); it++) {
+        for(it = _resources.begin(); it != _resources.end(); it++) {
             if(it->is_object()) {
                 this->resources.push_back(ResourceConfig(*it));
             } else {
@@ -209,7 +209,7 @@ static std::string _TemplateReplace(std::string in, TemplateInstance &_instance)
             } else if(isdigit(in[i])) {
                 size_t idx = 0;
                 while(isdigit(in[i])) {
-                    idx = (idx * 10) + (in[i] - '0');
+                    idx = (idx * 10) + static_cast<size_t>(in[i] - '0');
                     i++;
                 }
                 i--;
@@ -218,7 +218,7 @@ static std::string _TemplateReplace(std::string in, TemplateInstance &_instance)
                 } else if(idx == 0) {
                     throw std::runtime_error("ERROR: Template string argument specifier cannot be zero: `" + in + "`!");
                 } else {
-                    out << *std::next(_instance.templateArgs.begin(), idx - 1);
+                    out << *std::next(_instance.templateArgs.begin(), static_cast<ptrdiff_t>(idx) - 1);
                 }
             } else {
                 throw std::runtime_error("ERROR: Improperly formatted template string: `" + in + "`!");

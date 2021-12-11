@@ -12,6 +12,7 @@ class ResourceFormatter {
 
     public:
         ResourceFormatter();
+        virtual ~ResourceFormatter();
 
         /*virtual int encode(const coap_pdu_t *pdu, std::istream &in) = 0;*/
         virtual int decode(const std::vector<uint8_t> &data, std::ostream &out) = 0;

@@ -47,10 +47,10 @@ void ResourceMethod::methodHandler(coap_pdu_t *request, coap_pdu_t *response, st
                             coap_encode_var_safe(buf, 16, COAP_MEDIATYPE_TEXT_PLAIN), buf);
             coap_add_option(response, COAP_OPTION_MAXAGE,
                             coap_encode_var_safe(buf, 16, this->parentResource.getMaxAge()), buf);
-            strncpy((char *)buf, path.c_str(), 255);
-            coap_add_option(response, COAP_OPTION_URI_PATH, strlen((char *)buf), buf);
+            strncpy(reinterpret_cast<char *>(buf), path.c_str(), 255);
+            coap_add_option(response, COAP_OPTION_URI_PATH, strlen(reinterpret_cast<char *>(buf)), buf);
 
-            coap_add_data(response, val.size(), (const uint8_t *)val.c_str());
+            coap_add_data(response, val.size(), reinterpret_cast<const uint8_t *>(val.c_str()));
             response->code = COAP_RESPONSE_CODE_CONTENT;
             response->type = COAP_MESSAGE_NON;
         } break;
@@ -67,7 +67,11 @@ void ResourceMethod::methodHandler(coap_pdu_t *request, coap_pdu_t *response, st
             }
             response->code = COAP_RESPONSE_CODE_OK;
         } break;
-        default:
+        case ResourceMethodType::DELETE:
+        case ResourceMethodType::FETCH:
+        case ResourceMethodType::PATCH:
+        case ResourceMethodType::iPATCH:
+        case ResourceMethodType::None:
             break;
     }
 
