@@ -3,8 +3,6 @@
 
 #include <ostream>
 
-#include <coap2/coap.h>
-
 #include "Config.hpp"
 
 class ResourceFormatter {
