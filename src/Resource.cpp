@@ -146,7 +146,7 @@ int Resource::sessionGetData(coap_pdu_t *request, coap_pdu_t *response, coap_ses
                 cache_entry = coap_new_cache_entry(session, request, COAP_CACHE_NOT_RECORD_PDU, COAP_CACHE_IS_SESSION_BASED, 0);
                 if(cache_entry == nullptr) {
                     std::cerr << "Could not create CoAP cache entry for '" << this->getPath() << "'!" << std::endl;
-                    return 1;
+                    return -1;
                 }
                 data_so_far = new std::vector<uint8_t>;
                 if(data_so_far == nullptr) {
@@ -171,6 +171,11 @@ int Resource::sessionGetData(coap_pdu_t *request, coap_pdu_t *response, coap_ses
 
         if(size) {
             data_so_far = static_cast<std::vector<uint8_t> *>(coap_cache_get_app_data(cache_entry));
+            if(data_so_far == nullptr) {
+                /* TODO: Find the cause of this occasional error */
+                std::cerr << "data_so_far NULL on block for '" << this->getPath() << "'!" << std::endl;
+                return -1;
+            }
             /* TODO: Support re-retransmissions, if necessary. */
             data_so_far->insert(data_so_far->end(), data, data + size);
         }
@@ -180,6 +185,11 @@ int Resource::sessionGetData(coap_pdu_t *request, coap_pdu_t *response, coap_ses
             data_so_far = static_cast<std::vector<uint8_t> *>(coap_cache_get_app_data(cache_entry));
             coap_cache_set_app_data(cache_entry, nullptr, nullptr);
             dataOut.clear();
+            
+            if(data_so_far == nullptr) {
+                std::cerr << "data_so_far NULL on block for '" << this->getPath() << "'!" << std::endl;
+                return -1;
+            }
             dataOut = *data_so_far;
             
             return 1;
