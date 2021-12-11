@@ -19,7 +19,7 @@ class ResourceMethod {
 
         Resource &parentResource;
 
-        ResourceFormatter *fmt = nullptr;
+        std::list<ResourceFormatter *> fmts;
 
         /* TODO: Only allocate this once. */
         std::map<ResourceMethodType, std::string> methText;

@@ -120,8 +120,22 @@ ResourceConfig::ResourceConfig(nlohmann::json &_json) {
 
 ResourceMethodConfig::ResourceMethodConfig(nlohmann::json &_json, ResourceMethodType _type) {
     this->type = _type;
-    if(_json.contains("format") && _json["format"].is_string()) {
-        this->format = _json["format"];
+    if(_json.contains("format")) {
+        if(_json["format"].is_string()) {
+            this->format.push_back(_json["format"]);
+        } else if(_json["format"].is_array()) {
+            nlohmann::json formats = _json["format"];
+            nlohmann::json::iterator it;
+            for(it = formats.begin(); it != formats.end(); it++) {
+                if(it->is_string()) {
+                    this->format.push_back(*it);        
+                } else {
+                    throw std::runtime_error("ERROR: Resource method format is of incorrect type");
+                }
+            }
+        } else {
+            throw std::runtime_error("ERROR: Resource method format is of incorrect type");
+        }
     }
     if(_json.contains("print") && _json["print"].is_boolean()) {
         this->printValue = _json["print"];
@@ -231,7 +245,10 @@ void TemplateConfig::GenerateResources(std::list<ResourceConfig> &_resources, Te
         for(; mit != it->methods.end(); mit++) {
             ResourceMethodConfig meth;
             meth.type       = mit->type;
-            meth.format     = _TemplateReplace(mit->format, _instance);
+            std::list<std::string>::iterator fit = mit->format.begin();
+            for(; fit != mit->format.end(); fit++) {
+                meth.format.push_back(_TemplateReplace(*fit, _instance));
+            }
             meth.printValue = mit->printValue;
             meth.logValue   = mit->logValue;
             meth.store      = mit->store;

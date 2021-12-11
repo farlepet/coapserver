@@ -19,17 +19,17 @@ enum class ResourceMethodType {
 
 struct ResourceMethodConfig {
     /** Resource request method type */
-    ResourceMethodType type       = ResourceMethodType::None;
-    /** Format of data sent to/from resource */
-    std::string        format     = "STRING";
+    ResourceMethodType     type       = ResourceMethodType::None;
+    /** Format(s) of data sent to/from resource */
+    std::list<std::string> format;
     /** Whether or not to print requests to STDOUT */
-    bool               printValue = false;
+    bool                   printValue = false;
     /** Whether or not to log requests to a file */
-    bool               logValue   = false;
+    bool                   logValue   = false;
     /** Whether or not to store the received data as the resource's value */
-    bool               store      = false;
+    bool                   store      = false;
     /** Command to run when a request is received */
-    std::string        cmd        = "";
+    std::string            cmd        = "";
 
     ResourceMethodConfig(nlohmann::json &_json, ResourceMethodType _type);
     ResourceMethodConfig() {};

@@ -40,7 +40,7 @@
                     "log": true
                 },
                 "POST": {
-                    "format": "MSGPACK",
+                    "format": ["MSGPACK","HEX"],
                     "print": true,
                     "log": true
                 }

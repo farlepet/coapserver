@@ -8,7 +8,10 @@
 ResourceMethod::ResourceMethod(Resource &_parentResource, ResourceMethodConfig &_config) :
 config(_config),
 parentResource(_parentResource) {
-    this->fmt = ResourceFormatter::createResourceFormatter(_config);
+    std::list<std::string>::iterator it = _config.format.begin();
+    for(; it != _config.format.end(); it++) {
+        this->fmts.push_back(ResourceFormatter::createResourceFormatter(*it));
+    }
 
     this->methText[ResourceMethodType::None]    = "None";
     this->methText[ResourceMethodType::GET]     = "GET";
@@ -31,14 +34,15 @@ void ResourceMethod::methodHandler(coap_pdu_t *request, coap_pdu_t *response, st
     struct tm *tm   = localtime(&time);
     strftime(timebuf, 32, "%Y-%m-%dT%H:%M:%S", tm);
 
-    std::stringstream ss;
+    std::list<std::stringstream> sss;
 
     std::string path = this->parentResource.getPath();
 
     switch(this->config.type) {
         case ResourceMethodType::GET: {
             std::string val = this->parentResource.getValue();
-            ss << val;
+            sss.push_back(std::stringstream());
+            sss.back() << val;
             coap_add_option(response, COAP_OPTION_CONTENT_FORMAT,
                             coap_encode_var_safe(buf, 16, COAP_MEDIATYPE_TEXT_PLAIN), buf);
             coap_add_option(response, COAP_OPTION_MAXAGE,
@@ -51,15 +55,18 @@ void ResourceMethod::methodHandler(coap_pdu_t *request, coap_pdu_t *response, st
             response->type = COAP_MESSAGE_NON;
         } break;
         case ResourceMethodType::PUT:
-        case ResourceMethodType::POST:
-            if(this->fmt) {
-                this->fmt->decode(data, ss);
-                if(this->config.store) {
-                    this->parentResource.setValue(ss.str());
+        case ResourceMethodType::POST: {
+            std::list<ResourceFormatter *>::iterator it = this->fmts.begin();
+            for(; it != this->fmts.end(); it++) {
+                sss.push_back(std::stringstream());
+                (*it)->decode(data, sss.back());
+                if(this->config.store &&
+                   (it == this->fmts.begin())) {
+                    this->parentResource.setValue(sss.back().str());
                 }
             }
             response->code = COAP_RESPONSE_CODE_OK;
-            break;
+        } break;
         default:
             break;
     }
@@ -68,16 +75,16 @@ void ResourceMethod::methodHandler(coap_pdu_t *request, coap_pdu_t *response, st
     /* TODO: Handle indentation of multi-line output, possibly print a
      * timestamp on each line. */
     logValue += timebuf;
-    logValue += " | " + this->parentResource.getPath() + ":" + this->methText[this->config.type];
-    if(ss.str().size()) {
-        logValue += ": " + ss.str();
-    }
-
-    if(this->config.printValue) {
-        std::cout << logValue << std::endl;
-    }
-    if(this->config.logValue) {
-        log << logValue << std::endl;
+    logValue += " | " + this->parentResource.getPath() + ":" + this->methText[this->config.type] + ": ";
+    
+    std::list<std::stringstream>::iterator sit = sss.begin();
+    for(; sit != sss.end(); sit++) {
+        if(this->config.printValue) {
+            std::cout << logValue << (*sit).str() << std::endl;
+        }
+        if(this->config.logValue) {
+            log << logValue << (*sit).str() << std::endl;
+        }
     }
 }
 

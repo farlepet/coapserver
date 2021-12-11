@@ -16,7 +16,7 @@ class ResourceFormatter {
         /*virtual int encode(const coap_pdu_t *pdu, std::istream &in) = 0;*/
         virtual int decode(const std::vector<uint8_t> &data, std::ostream &out) = 0;
 
-        static ResourceFormatter *createResourceFormatter(ResourceMethodConfig &_config);
+        static ResourceFormatter *createResourceFormatter(std::string &_resource);
 };
 
 #endif /* _RESOURCE_FORMATTER_HPP_ */
