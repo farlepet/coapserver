@@ -176,8 +176,9 @@ int Resource::sessionGetData(coap_pdu_t *request, coap_pdu_t *response, coap_ses
                 std::cerr << "data_so_far NULL on block for '" << this->getPath() << "'!" << std::endl;
                 return -1;
             }
-            /* TODO: Support re-retransmissions, if necessary. */
-            data_so_far->insert(data_so_far->end(), data, data + size);
+            /* Insert the received data at the correct location within the buffer */
+            data_so_far->resize(total);
+            std::copy(data, data + size, data_so_far->begin() + static_cast<long>(offset));
         }
 
         if((offset + size) == total) {
