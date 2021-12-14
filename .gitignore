@@ -4,3 +4,4 @@ coap_server
 *.log
 config.json
 .vscode
+build

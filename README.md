@@ -28,6 +28,28 @@ Planned Features:
 Requirements:
  - `g++`/`clang++`
  - `make`
+ - `cmake`
  - libcoap: https://github.com/obgm/libcoap
  - nlohmann JSON: https://github.com/nlohmann/json
  - boost: https://www.boost.org/
+
+Optional:
+ - msgpack-c: https://github.com/msgpack/msgpack-c/tree/cpp_master
+   - C++ version required for MSGPACK decoding support
+
+Building
+--------
+General build process:
+
+    mkdir build && cd build
+    cmake ../ [options]
+    make
+
+The following CMake options may be useful:
+ - `-DDISABLE_MSGPACK=<YES/NO>`
+   - Default: NO
+   - Choose whether or not to compile in MSGPACK support
+ - `-DCMAKE_CXX_COMPILER=<...>`
+   - Choose which c++ compiler to use
+   - Tested with `g++` and `clang++`
+
