@@ -5,7 +5,7 @@
 #include <string>
 #include <iosfwd>
 
-#include <coap2/coap.h>
+#include <coap3/coap.h>
 
 #include "Config.hpp"
 #include "ResourceFormatter.hpp"
@@ -27,7 +27,7 @@ class ResourceMethod {
     public:
         ResourceMethod(Resource &_parentResource, ResourceMethodConfig &_config);
         
-        void methodHandler(coap_pdu_t *request, coap_pdu_t *response, std::vector<std::uint8_t> &data, std::ostream &log);
+        void methodHandler(const coap_pdu_t *request, coap_pdu_t *response, std::vector<std::uint8_t> &data, std::ostream &log);
 
         ResourceMethodType getMethodType();
 };

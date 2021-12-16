@@ -27,7 +27,7 @@ option(DISABLE_MSGPACK "Disable MSGPACK decoding support" OFF)
 
 # Required libraries
 find_library(COAP_LIBRARY
-             NAMES coap-2 coap-2-gnutls coap-2-openssl coap-2-tinydtls coap-2-mbedtls)
+             NAMES coap-3 coap-3-gnutls coap-3-openssl coap-3-tinydtls coap-3-mbedtls)
 find_package(Boost 1.45.0 COMPONENTS program_options)
 # Optional libraries
 find_package(msgpack)

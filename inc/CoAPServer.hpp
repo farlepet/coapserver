@@ -4,7 +4,7 @@
 #include <string>
 #include <list>
 
-#include <coap2/coap.h>
+#include <coap3/coap.h>
 
 #include "Config.hpp"
 #include "Resource.hpp"

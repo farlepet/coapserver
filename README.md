@@ -29,13 +29,18 @@ Requirements:
  - `g++`/`clang++`
  - `make`
  - `cmake`
- - libcoap: https://github.com/obgm/libcoap
+ - libcoap 3: https://github.com/obgm/libcoap
  - nlohmann JSON: https://github.com/nlohmann/json
  - boost: https://www.boost.org/
 
 Optional:
  - msgpack-c: https://github.com/msgpack/msgpack-c/tree/cpp_master
    - C++ version required for MSGPACK decoding support
+
+Available library packages:
+ - Debian: `nlohmann-json3-dev, libcoap3-dev, libboost-dev`
+ - Arch Linux: `libcoap (AUR), nlohmann-json, boost, msgpack-cxx`
+
 
 Building
 --------

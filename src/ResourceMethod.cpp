@@ -23,7 +23,7 @@ parentResource(_parentResource) {
     this->methText[ResourceMethodType::iPATCH]  = "iPATCH";
 }
 
-void ResourceMethod::methodHandler(coap_pdu_t *request, coap_pdu_t *response, std::vector<uint8_t> &data, std::ostream &log) {
+void ResourceMethod::methodHandler(const coap_pdu_t *request, coap_pdu_t *response, std::vector<uint8_t> &data, std::ostream &log) {
     (void)request; /* Not currently used */
 
     uint8_t buf[256];
@@ -51,8 +51,9 @@ void ResourceMethod::methodHandler(coap_pdu_t *request, coap_pdu_t *response, st
             coap_add_option(response, COAP_OPTION_URI_PATH, strlen(reinterpret_cast<char *>(buf)), buf);
 
             coap_add_data(response, val.size(), reinterpret_cast<const uint8_t *>(val.c_str()));
-            response->code = COAP_RESPONSE_CODE_CONTENT;
-            response->type = COAP_MESSAGE_NON;
+            
+            coap_pdu_set_code(response, COAP_RESPONSE_CODE_CONTENT);
+            coap_pdu_set_type(response, COAP_MESSAGE_NON);
         } break;
         case ResourceMethodType::PUT:
         case ResourceMethodType::POST: {
@@ -65,7 +66,8 @@ void ResourceMethod::methodHandler(coap_pdu_t *request, coap_pdu_t *response, st
                     this->parentResource.setValue(sss.back().str());
                 }
             }
-            response->code = COAP_RESPONSE_CODE_OK;
+            coap_pdu_set_code(response, COAP_RESPONSE_CODE_OK);
+            coap_pdu_set_type(response, COAP_MESSAGE_ACK);
         } break;
         case ResourceMethodType::DELETE:
         case ResourceMethodType::FETCH:

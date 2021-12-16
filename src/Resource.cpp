@@ -3,7 +3,7 @@
 
 #include "Resource.hpp"
 
-#include "coap2/resource.h"
+#include "coap3/coap.h"
 
 Resource::Resource(ResourceConfig &_config) :
 config(_config) {
@@ -72,7 +72,7 @@ int Resource::attach(coap_context_t *ctx) {
     return 0;
 }
 
-void Resource::handleCoAPRequest(coap_pdu_t *request, coap_pdu_t *response, coap_session_t *session, ResourceMethodType method) {
+void Resource::handleCoAPRequest(const coap_pdu_t *request, coap_pdu_t *response, coap_session_t *session, ResourceMethodType method) {
     std::vector<uint8_t> data;
 
     if(method == ResourceMethodType::PUT ||
@@ -80,11 +80,11 @@ void Resource::handleCoAPRequest(coap_pdu_t *request, coap_pdu_t *response, coap
         int ret = this->sessionGetData(request, response, session, data);
         if(ret == 0) {
             /* Waiting on more data */
-            response->code = COAP_RESPONSE_CODE_CONTINUE;
+            coap_pdu_set_code(response, COAP_RESPONSE_CODE_CONTINUE);
             return;
         } else if(ret < 0) {
             /* Error */
-            response->code = COAP_RESPONSE_CODE_INTERNAL_ERROR;
+            coap_pdu_set_code(response, COAP_RESPONSE_CODE_INTERNAL_ERROR);
             return;
         }
     }
@@ -122,7 +122,7 @@ _cache_free_app_data(void *data) {
     delete static_cast<std::vector<uint8_t> *>(data);
 }
 
-int Resource::sessionGetData(coap_pdu_t *request, coap_pdu_t *response, coap_session_t *session, std::vector<uint8_t> &dataOut) {
+int Resource::sessionGetData(const coap_pdu_t *request, coap_pdu_t *response, coap_session_t *session, std::vector<uint8_t> &dataOut) {
     (void)response;
     
     size_t         size;
@@ -208,13 +208,9 @@ int Resource::sessionGetData(coap_pdu_t *request, coap_pdu_t *response, coap_ses
 
 
 template<ResourceMethodType T>
-void Resource::coapHandlerX(coap_context_t *context, coap_resource_t *resource, coap_session_t *session,
-                            coap_pdu_t *request, coap_binary_t *token, coap_string_t *query,
-                            coap_pdu_t *response) {
-    (void)context;
+void Resource::coapHandlerX(coap_resource_t *resource, coap_session_t *session, const coap_pdu_t *request,
+                            const coap_string_t *query, coap_pdu_t *response) {
     (void)resource;
-    (void)session;
-    (void)token;
     (void)query;
 
     Resource *res = static_cast<Resource *>(coap_resource_get_userdata(resource));
