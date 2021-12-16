@@ -38,7 +38,7 @@ Optional:
    - C++ version required for MSGPACK decoding support
 
 Available library packages:
- - Debian: `nlohmann-json3-dev, libcoap3-dev, libboost-dev`
+ - Debian: `nlohmann-json3-dev, libcoap3-dev, libboost-all-dev`
  - Arch Linux: `libcoap (AUR), nlohmann-json, boost, msgpack-cxx`
 
 
