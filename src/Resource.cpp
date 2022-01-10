@@ -192,6 +192,7 @@ int Resource::sessionGetData(const coap_pdu_t *request, coap_pdu_t *response, co
                 return -1;
             }
             dataOut = *data_so_far;
+            delete data_so_far;
             
             return 1;
         }
