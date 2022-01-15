@@ -45,6 +45,23 @@
                     "log": true
                 }
             }
+        },
+        {
+            "name": "Dynamic resource",
+            "dynamic": true,
+            "path": "dyn/(.*)/val([0-9]*)",
+            "logfile": "logs/dynamic/$1/value-$2.log",
+            "methods": {
+                "PUT": {
+                    "format": "STRING",
+                    "print": true,
+                    "log": true
+                },
+                "GET": {
+                    "format": "STRING",
+                    "print": true
+                }
+            }
         }
     ],
     "templates": [

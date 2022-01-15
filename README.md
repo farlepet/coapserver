@@ -15,6 +15,7 @@ Current Features:
     - `HEX` - Raw data represented as hex
  - Logging to a separate file for each resource
  - Templated resource configuration for creating multiple similar resources
+ - Regex-based on-the-fly resource creation
  - Multi-block requests
     - Currently no support for multi-block responses
 
@@ -23,7 +24,6 @@ Planned Features:
  - Run commands with request data
  - Set a resource's value from an external program
  - Encoding responses to a GET request
- - Possibly listen to any resource that follows a given format
 
 Requirements:
  - `g++`/`clang++`

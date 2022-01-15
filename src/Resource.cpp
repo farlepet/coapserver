@@ -211,7 +211,6 @@ int Resource::sessionGetData(const coap_pdu_t *request, coap_pdu_t *response, co
 template<ResourceMethodType T>
 void Resource::coapHandlerX(coap_resource_t *resource, coap_session_t *session, const coap_pdu_t *request,
                             const coap_string_t *query, coap_pdu_t *response) {
-    (void)resource;
     (void)query;
 
     Resource *res = static_cast<Resource *>(coap_resource_get_userdata(resource));

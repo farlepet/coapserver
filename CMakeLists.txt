@@ -16,6 +16,7 @@ if(CMAKE_CXX_COMPILER_ID STREQUAL "Clang")
     message(STATUS "Setting Clang-specific compiler flags")
     set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} \
                          -Weverything \
+                         -Wno-unknown-warning-option \
                          -Wno-c++98-compat \
                          -Wno-reserved-identifier \
                          -Wno-reserved-macro-identifier \
@@ -24,6 +25,7 @@ endif()
 
 # Options
 option(DISABLE_MSGPACK "Disable MSGPACK decoding support" OFF)
+option(DEBUG "Enable debugging symbols" OFF)
 
 # Required libraries
 find_library(COAP_LIBRARY
@@ -41,6 +43,11 @@ endif()
 
 if(!BOOST_FOUND)
     message(FATAL_ERROR "Could not find the required Boost libraries!")
+endif()
+
+if(DEBUG)
+    message(STATUS "Enabling debug symbols")
+    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -g")
 endif()
 
 # Resource Formatters

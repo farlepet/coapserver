@@ -48,6 +48,8 @@ struct ResourceConfig {
     unsigned int maxAge       = 3600;
     /** Whether or not to allow observation of the resource */
     bool         observable   = false;
+    /** Whether to allow wildcard matching on resource path */
+    bool         dynamic      = false;
 
     std::list<ResourceMethodConfig> methods;
 

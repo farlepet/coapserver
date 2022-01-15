@@ -98,6 +98,9 @@ ResourceConfig::ResourceConfig(nlohmann::json &_json) {
     if(_json.contains("observable") && _json["observable"].is_boolean()) {
         this->observable = _json["observable"];
     }
+    if(_json.contains("dynamic") && _json["dynamic"].is_boolean()) {
+        this->dynamic = _json["dynamic"];
+    }
     if(_json.contains("maxage") && _json["maxage"].is_number()) {
         this->maxAge = _json["maxage"];
     }
