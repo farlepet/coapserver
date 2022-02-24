@@ -51,7 +51,7 @@ int CoAPServer::start() {
     if(!ret && this->dynamicResources.size()) {
         coap_resource_t *res = coap_resource_unknown_init(CoAPServer::dynamicResourceHandler<ResourceMethodType::PUT>);
         coap_register_handler(res, COAP_REQUEST_POST, CoAPServer::dynamicResourceHandler<ResourceMethodType::POST>);
-        coap_register_handler(res, COAP_REQUEST_GET, CoAPServer::dynamicResourceHandler<ResourceMethodType::PUT>);
+        coap_register_handler(res, COAP_REQUEST_GET, CoAPServer::dynamicResourceHandler<ResourceMethodType::GET>);
         coap_resource_set_userdata(res, this);
         coap_add_resource(this->ctx, res);
     }
