@@ -11,8 +11,9 @@ Current Features:
  - Resource observation
  - Multiple data format support
     - `MSGPACK` - Decode data as MSGPACK
-    - `STRING` - Plaintext
-    - `HEX` - Raw data represented as hex
+    - `STRING`  - Plaintext
+    - `HEX`     - Raw data represented as hex
+    - `BASE64`  - Raw data represented as base64
  - Logging to a separate file for each resource
  - Templated resource configuration for creating multiple similar resources
  - Regex-based on-the-fly resource creation

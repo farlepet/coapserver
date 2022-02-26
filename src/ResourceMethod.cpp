@@ -12,15 +12,17 @@ parentResource(_parentResource) {
     for(; it != _config.format.end(); it++) {
         this->fmts.push_back(ResourceFormatter::createResourceFormatter(*it));
     }
+}
 
-    this->methText[ResourceMethodType::None]    = "None";
-    this->methText[ResourceMethodType::GET]     = "GET";
-    this->methText[ResourceMethodType::POST]    = "POST";
-    this->methText[ResourceMethodType::PUT]     = "PUT";
-    this->methText[ResourceMethodType::DELETE]  = "DELETE";
-    this->methText[ResourceMethodType::FETCH]   = "FETCH";
-    this->methText[ResourceMethodType::PATCH]   = "PATCH";
-    this->methText[ResourceMethodType::iPATCH]  = "iPATCH";
+std::string ResourceMethod::methStringify(ResourceMethodType type) {
+    return (type == ResourceMethodType::None)   ? "None"   :
+           (type == ResourceMethodType::GET)    ? "GET"    :
+           (type == ResourceMethodType::POST)   ? "POST"   :
+           (type == ResourceMethodType::PUT)    ? "PUT"    :
+           (type == ResourceMethodType::DELETE) ? "DELETE" :
+           (type == ResourceMethodType::FETCH)  ? "FETCH"  :
+           (type == ResourceMethodType::PATCH)  ? "PATCH"  :
+           (type == ResourceMethodType::iPATCH) ? "iPATCH" : "???";
 }
 
 void ResourceMethod::methodHandler(const coap_pdu_t *request, coap_pdu_t *response, std::vector<uint8_t> &data, std::ostream &log) {
@@ -81,7 +83,7 @@ void ResourceMethod::methodHandler(const coap_pdu_t *request, coap_pdu_t *respon
     /* TODO: Handle indentation of multi-line output, possibly print a
      * timestamp on each line. */
     logValue += timebuf;
-    logValue += " | " + this->parentResource.getPath() + ":" + this->methText[this->config.type] + ": ";
+    logValue += " | " + this->parentResource.getPath() + ":" + this->methStringify(this->config.type) + ": ";
     
     std::list<std::stringstream>::iterator sit = sss.begin();
     for(; sit != sss.end(); sit++) {

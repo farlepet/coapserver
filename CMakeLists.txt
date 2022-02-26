@@ -53,7 +53,8 @@ endif()
 # Resource Formatters
 add_library(ResourceFormatters
             ${CMAKE_CURRENT_LIST_DIR}/src/ResourceFormatter/ResourceFormatterHex.cpp
-            ${CMAKE_CURRENT_LIST_DIR}/src/ResourceFormatter/ResourceFormatterText.cpp)
+            ${CMAKE_CURRENT_LIST_DIR}/src/ResourceFormatter/ResourceFormatterText.cpp
+            ${CMAKE_CURRENT_LIST_DIR}/src/ResourceFormatter/ResourceFormatterBase64.cpp)
 
 if(msgpack_FOUND AND (DISABLE_MSGPACK STREQUAL OFF))
     message(STATUS "Compiling with MSGPACK support")

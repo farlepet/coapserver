@@ -21,8 +21,8 @@ class ResourceMethod {
 
         std::list<ResourceFormatter *> fmts;
 
-        /* TODO: Only allocate this once. */
-        std::map<ResourceMethodType, std::string> methText;
+        static std::string methStringify(ResourceMethodType type);
+
 
     public:
         ResourceMethod(Resource &_parentResource, ResourceMethodConfig &_config);

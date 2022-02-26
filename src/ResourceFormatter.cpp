@@ -2,6 +2,7 @@
 #include "ResourceFormatter.hpp"
 #include "ResourceFormatter/ResourceFormatterHex.hpp"
 #include "ResourceFormatter/ResourceFormatterText.hpp"
+#include "ResourceFormatter/ResourceFormatterBase64.hpp"
 #ifdef USE_MSGPACK
 #  include "ResourceFormatter/ResourceFormatterMsgpack.hpp"
 #endif
@@ -19,6 +20,8 @@ ResourceFormatter *ResourceFormatter::createResourceFormatter(std::string &_form
         return new ResourceFormatterText();
     } else if(_format == "HEX") {
         return new ResourceFormatterHex();
+    } else if(_format == "BASE64") {
+        return new ResourceFormatterBase64();
 #ifdef USE_MSGPACK
     } else if(_format == "MSGPACK") {
         return new ResourceFormatterMsgpack();
