@@ -24,17 +24,19 @@ struct ResourceMethodConfig {
     /** Format(s) of data sent to/from resource */
     std::list<std::string> format;
     /** Whether or not to print requests to STDOUT */
-    bool                   printValue = false;
+    bool                   printValue  = false;
     /** Whether or not to log requests to a file */
-    bool                   logValue   = false;
+    bool                   logValue    = false;
     /** Whether or not to store the received data as the resource's value */
-    bool                   store      = false;
+    bool                   store       = false;
     /** Command to run when a request is received */
-    std::string            cmd        = "";
+    std::string            cmd         = "";
     /** Whether to use stdin to pass resource value to command */
-    bool                   cmdStdin   = false;
+    bool                   cmdStdin    = false;
     /** Maximum allowed command runtime, in milliseconds */
-    unsigned int           cmdTimeout = 500;
+    unsigned int           cmdTimeout  = 500;
+    /** Whether to log input data to command */
+    bool                   cmdLogInput = false;
 
     ResourceMethodConfig(nlohmann::json &_json, ResourceMethodType _type);
     ResourceMethodConfig() {}

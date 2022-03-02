@@ -139,8 +139,13 @@ int ResourceMethod::handleRequestQueueItem(RequestQueueItem &item) {
             for(; it != this->fmts.end(); it++) {
                 sss.push_back(std::stringstream());
                 (*it)->decode(item.data, sss.back());
-                
+
                 if(this->config.cmd.size()) {
+                    if(this->config.cmdLogInput) {
+                        /* We want to log the input, so just duplicate the stringstream */
+                        std::string dup = sss.back().str();
+                        sss.push_back(std::stringstream(dup));
+                    }
                     this->executeCmd(sss.back(), this->config.cmd);
                 }
                 

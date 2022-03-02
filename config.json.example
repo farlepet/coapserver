@@ -74,7 +74,8 @@
                     "log":        true,
                     "cmd":        "sh -c \"notify-send $COAPSERVER_RESOURCE::$COAPSERVER_METHOD $COAPSERVER_PAYLOAD\"",
                     "cmdstdin":   false,
-                    "cmdtimeout": 250
+                    "cmdtimeout": 250,
+                    "cmdloginput": true
                 }
             }
         }

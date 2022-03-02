@@ -162,6 +162,9 @@ ResourceMethodConfig::ResourceMethodConfig(nlohmann::json &_json, ResourceMethod
     if(_json.contains("cmdtimeout") && _json["cmdtimeout"].is_number()) {
         this->cmdTimeout = _json["cmdtimeout"];
     }
+    if(_json.contains("cmdloginput") && _json["cmdloginput"].is_boolean()) {
+        this->cmdLogInput = _json["cmdloginput"];
+    }
 }
 
 TemplateInstance::TemplateInstance(nlohmann::json &_json) {
