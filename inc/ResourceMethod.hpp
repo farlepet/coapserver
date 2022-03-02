@@ -23,6 +23,7 @@ class ResourceMethod {
 
         static std::string methStringify(ResourceMethodType type);
 
+        int executeCmd(std::stringstream &data, std::string cmd);
 
     public:
         ResourceMethod(Resource &_parentResource, ResourceMethodConfig &_config);

@@ -150,7 +150,13 @@ ResourceMethodConfig::ResourceMethodConfig(nlohmann::json &_json, ResourceMethod
         this->store = _json["store"];
     }
     if(_json.contains("cmd") && _json["cmd"].is_string()) {
+        if(this->format.size() != 1) {
+            throw std::runtime_error("ERROR: cmd can only be used on a resource method with a single formatter selected.");
+        }
         this->cmd = _json["cmd"];
+    }
+    if(_json.contains("cmdstdin") && _json["cmdstdin"].is_boolean()) {
+        this->cmdStdin = _json["cmdstdin"];
     }
 }
 

@@ -30,6 +30,8 @@ struct ResourceMethodConfig {
     bool                   store      = false;
     /** Command to run when a request is received */
     std::string            cmd        = "";
+    /** Whether to use stdin to pass resource value to command */
+    bool                   cmdStdin   = false;
 
     ResourceMethodConfig(nlohmann::json &_json, ResourceMethodType _type);
     ResourceMethodConfig() {}

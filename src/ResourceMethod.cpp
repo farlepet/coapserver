@@ -1,6 +1,7 @@
 #include <ctime>
 #include <sstream>
 #include <iostream>
+#include <boost/process.hpp>
 
 #include "ResourceMethod.hpp"
 #include "Resource.hpp"
@@ -23,6 +24,45 @@ std::string ResourceMethod::methStringify(ResourceMethodType type) {
            (type == ResourceMethodType::FETCH)  ? "FETCH"  :
            (type == ResourceMethodType::PATCH)  ? "PATCH"  :
            (type == ResourceMethodType::iPATCH) ? "iPATCH" : "???";
+}
+
+int ResourceMethod::executeCmd(std::stringstream &data, std::string cmd) {
+    std::string dataIn = data.str();
+    /* Reset stringstream */
+    data.str("");
+    data.clear();
+
+    /* TODO: Format cmd is cmdstdin is false */
+
+    boost::process::ipstream cstdout;
+    boost::process::opstream cstdin;
+
+    boost::process::child cproc(cmd,
+                                boost::process::std_out > cstdout,
+                                boost::process::std_in < cstdin);
+
+    if(this->config.cmdStdin) {
+        cstdin << dataIn;
+    }
+
+    cstdin.close();
+    /* Seems a little hacky, but it works: */
+    cstdin.pipe().close();
+
+    std::cerr << "[CMD] Wrote " << dataIn << " to stdin" << std::endl;
+
+    cproc.wait();
+
+    std::cerr << "[CMD] Command exited with result code " << cproc.exit_code() << std::endl;
+
+    std::string line;
+    while(std::getline(cstdout, line) && !line.empty()) {
+        data << line;
+    }
+
+    std::cerr << "[CMD] Command Result: " << data.str() << std::endl;
+
+    return cproc.exit_code();
 }
 
 void ResourceMethod::methodHandler(const coap_pdu_t *request, coap_pdu_t *response, std::vector<uint8_t> &data, std::ostream &log) {
@@ -63,6 +103,11 @@ void ResourceMethod::methodHandler(const coap_pdu_t *request, coap_pdu_t *respon
             for(; it != this->fmts.end(); it++) {
                 sss.push_back(std::stringstream());
                 (*it)->decode(data, sss.back());
+                
+                if(this->config.cmd.size()) {
+                    this->executeCmd(sss.back(), this->config.cmd);
+                }
+                
                 if(this->config.store &&
                    (it == this->fmts.begin())) {
                     this->parentResource.setValue(sss.back().str());
