@@ -8,7 +8,7 @@ ResourceFormatterBase64::ResourceFormatterBase64() {
 }
 
 /* Base64 character set - RFC4648 */
-static const char *_base64_chars = "ABCDEFGHIJKLMNOPQRSTUVQXYZ"
+static const char *_base64_chars = "ABCDEFGHIJKLMNOPQRSTUVWXYZ"
                                    "abcdefghijklmnopqrstuvwxyz"
                                    "0123456789+/";
 
