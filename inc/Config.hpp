@@ -33,6 +33,8 @@ struct ResourceMethodConfig {
     std::string            cmd        = "";
     /** Whether to use stdin to pass resource value to command */
     bool                   cmdStdin   = false;
+    /** Maximum allowed command runtime, in milliseconds */
+    unsigned int           cmdTimeout = 500;
 
     ResourceMethodConfig(nlohmann::json &_json, ResourceMethodType _type);
     ResourceMethodConfig() {}

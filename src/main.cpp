@@ -57,8 +57,6 @@ int main(int argc, char **argv) {
 }
 
 static int _requestQueueThread(RequestQueue &queue) {
-    std::cerr << "Request handler thread started" << std::endl;
-
     while(1) {
         if(queue.count()) {
             RequestQueueItem item = queue.dequeue();

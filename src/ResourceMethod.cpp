@@ -27,45 +27,6 @@ std::string ResourceMethod::methStringify(ResourceMethodType type) {
            (type == ResourceMethodType::iPATCH) ? "iPATCH" : "???";
 }
 
-int ResourceMethod::executeCmd(std::stringstream &data, std::string cmd) {
-    std::string dataIn = data.str();
-    /* Reset stringstream */
-    data.str("");
-    data.clear();
-
-    /* TODO: Format cmd is cmdstdin is false */
-
-    boost::process::ipstream cstdout;
-    boost::process::opstream cstdin;
-
-    boost::process::child cproc(cmd,
-                                boost::process::std_out > cstdout,
-                                boost::process::std_in < cstdin);
-
-    if(this->config.cmdStdin) {
-        cstdin << dataIn;
-    }
-
-    cstdin.close();
-    /* Seems a little hacky, but it works: */
-    cstdin.pipe().close();
-
-    std::cerr << "[CMD] Wrote " << dataIn << " to stdin" << std::endl;
-
-    cproc.wait();
-
-    std::cerr << "[CMD] Command exited with result code " << cproc.exit_code() << std::endl;
-
-    std::string line;
-    while(std::getline(cstdout, line) && !line.empty()) {
-        data << line;
-    }
-
-    std::cerr << "[CMD] Command Result: " << data.str() << std::endl;
-
-    return cproc.exit_code();
-}
-
 void ResourceMethod::methodHandler(const coap_pdu_t *request, coap_pdu_t *response, std::vector<uint8_t> &data) {
     (void)request; /* Not currently used */
 
@@ -115,6 +76,43 @@ void ResourceMethod::methodHandler(const coap_pdu_t *request, coap_pdu_t *respon
 
 ResourceMethodType ResourceMethod::getMethodType() {
     return this->config.type;
+}
+
+int ResourceMethod::executeCmd(std::stringstream &data, std::string cmd) {
+    std::string dataIn = data.str();
+
+    /* TODO: Format cmd if cmdstdin is false */
+
+    boost::process::ipstream cstdout;
+    boost::process::opstream cstdin;
+
+    boost::process::child cproc(cmd,
+                                boost::process::std_out > cstdout,
+                                boost::process::std_in < cstdin);
+
+    if(this->config.cmdStdin) {
+        cstdin << dataIn;
+    }
+
+    cstdin.close();
+    /* Seems a little hacky, but it works: */
+    cstdin.pipe().close();
+
+    if(!cproc.wait_for(std::chrono::milliseconds{this->config.cmdTimeout})) {
+        std::cerr << "Command [" << cmd << "] did not exit after " << this->config.cmdTimeout << " ms!" << std::endl;
+        return -1;
+    }
+
+    /* Reset stringstream */
+    data.str("");
+    data.clear();
+
+    std::string line;
+    while(std::getline(cstdout, line) && !line.empty()) {
+        data << line;
+    }
+
+    return cproc.exit_code();
 }
 
 int ResourceMethod::handleRequestQueueItem(RequestQueueItem &item) {
