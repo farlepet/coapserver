@@ -79,7 +79,8 @@ target_sources(${EXECUTABLE_NAME} PRIVATE
                ${CMAKE_CURRENT_LIST_DIR}/src/CoAPServer.cpp
                ${CMAKE_CURRENT_LIST_DIR}/src/Resource.cpp
                ${CMAKE_CURRENT_LIST_DIR}/src/ResourceMethod.cpp
-               ${CMAKE_CURRENT_LIST_DIR}/src/ResourceFormatter.cpp)
+               ${CMAKE_CURRENT_LIST_DIR}/src/ResourceFormatter.cpp
+               ${CMAKE_CURRENT_LIST_DIR}/src/RequestQueue.cpp)
 
 include_directories(${EXECUTABLE_NAME}
                     ${CMAKE_CURRENT_LIST_DIR}/inc/

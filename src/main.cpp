@@ -1,16 +1,20 @@
+#include <thread>
 #include <iostream>
 #include <boost/program_options.hpp>
 
 #include "Config.hpp"
 #include "CoAPServer.hpp"
+#include "RequestQueue.hpp"
 
 typedef struct {
     std::string configPath;
     std::string portOverride;
     std::string addrOverride;
+    size_t      queueSize;
 } options_t;
 
 static int _handleCmdLine(int, char **, options_t &);
+static int _requestQueueThread(RequestQueue &);
 
 int main(int argc, char **argv) {
     options_t options;
@@ -42,11 +46,25 @@ int main(int argc, char **argv) {
         conf.getEndpoint().address = options.addrOverride;
     }
 
-    CoAPServer coap(conf);
+    RequestQueue rQueue(options.queueSize);
+    CoAPServer   coap(conf, rQueue);
+
+    std::thread rQueueThread(_requestQueueThread, std::ref(rQueue));
 
     coap.start();
 
     return 0;
+}
+
+static int _requestQueueThread(RequestQueue &queue) {
+    std::cerr << "Request handler thread started" << std::endl;
+
+    while(1) {
+        if(queue.count()) {
+            RequestQueueItem item = queue.dequeue();
+            item.src->handleRequestQueueItem(item);
+        }
+    }
 }
 
 namespace po = boost::program_options;
@@ -59,7 +77,8 @@ static int _handleCmdLine(int argc, char **argv, options_t &_options) {
         ("help,h",   "Print this help message")
         ("config,c", po::value<std::string>(&_options.configPath)->default_value("config.json"), "Configuration file")
         ("port,p",   po::value<std::string>(&_options.portOverride),                             "Override listening port")
-        ("addr,a",   po::value<std::string>(&_options.addrOverride),                             "Override listening address");
+        ("addr,a",   po::value<std::string>(&_options.addrOverride),                             "Override listening address")
+        ("queue,q",  po::value<size_t>     (&_options.queueSize)->default_value(32),             "Set request handler queue size");
 
     po::variables_map vmap;
     po::store(po::parse_command_line(argc, argv, desc), vmap);

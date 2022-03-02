@@ -6,9 +6,10 @@
 #include "ResourceMethod.hpp"
 #include "Resource.hpp"
 
-ResourceMethod::ResourceMethod(Resource &_parentResource, ResourceMethodConfig &_config) :
+ResourceMethod::ResourceMethod(Resource &_parentResource, ResourceMethodConfig &_config, RequestQueue &_queue) :
 config(_config),
-parentResource(_parentResource) {
+parentResource(_parentResource),
+queue(_queue) {
     std::list<std::string>::iterator it = _config.format.begin();
     for(; it != _config.format.end(); it++) {
         this->fmts.push_back(ResourceFormatter::createResourceFormatter(*it));
@@ -65,26 +66,22 @@ int ResourceMethod::executeCmd(std::stringstream &data, std::string cmd) {
     return cproc.exit_code();
 }
 
-void ResourceMethod::methodHandler(const coap_pdu_t *request, coap_pdu_t *response, std::vector<uint8_t> &data, std::ostream &log) {
+void ResourceMethod::methodHandler(const coap_pdu_t *request, coap_pdu_t *response, std::vector<uint8_t> &data) {
     (void)request; /* Not currently used */
 
-    uint8_t buf[256];
-    
-    /* TODO: Allow selecting time format */
-    char       timebuf[32];
-    time_t     time = std::time(nullptr);
-    struct tm *tm   = localtime(&time);
-    strftime(timebuf, 32, "%Y-%m-%dT%H:%M:%S", tm);
-
-    std::list<std::stringstream> sss;
-
-    std::string path = this->parentResource.getPath();
+    time_t time = std::time(nullptr);
 
     switch(this->config.type) {
         case ResourceMethodType::GET: {
-            std::string val = this->parentResource.getValue();
-            sss.push_back(std::stringstream());
-            sss.back() << val;
+            std::string val  = this->parentResource.getValue();
+            std::string path = this->parentResource.getPath();
+            uint8_t buf[256];
+
+            if(this->queue.enqueue(RequestQueueItem(this, this->parentResource.getValue(), time))) {
+                coap_pdu_set_code(response, COAP_RESPONSE_CODE_INTERNAL_ERROR);
+                return;
+            }
+
             coap_add_option(response, COAP_OPTION_CONTENT_FORMAT,
                             coap_encode_var_safe(buf, 16, COAP_MEDIATYPE_TEXT_PLAIN), buf);
             coap_add_option(response, COAP_OPTION_MAXAGE,
@@ -93,16 +90,53 @@ void ResourceMethod::methodHandler(const coap_pdu_t *request, coap_pdu_t *respon
             coap_add_option(response, COAP_OPTION_URI_PATH, strlen(reinterpret_cast<char *>(buf)), buf);
 
             coap_add_data(response, val.size(), reinterpret_cast<const uint8_t *>(val.c_str()));
-            
+
             coap_pdu_set_code(response, COAP_RESPONSE_CODE_CONTENT);
             coap_pdu_set_type(response, COAP_MESSAGE_NON);
+        } break;
+        case ResourceMethodType::PUT:
+        case ResourceMethodType::POST: {
+            if(this->queue.enqueue(RequestQueueItem(this, data, time))) {
+                coap_pdu_set_code(response, COAP_RESPONSE_CODE_INTERNAL_ERROR);
+                return;
+            }
+
+            coap_pdu_set_code(response, COAP_RESPONSE_CODE_OK);
+            coap_pdu_set_type(response, COAP_MESSAGE_ACK);
+        } break;
+        case ResourceMethodType::DELETE:
+        case ResourceMethodType::FETCH:
+        case ResourceMethodType::PATCH:
+        case ResourceMethodType::iPATCH:
+        case ResourceMethodType::None:
+            break;
+    }
+}
+
+ResourceMethodType ResourceMethod::getMethodType() {
+    return this->config.type;
+}
+
+int ResourceMethod::handleRequestQueueItem(RequestQueueItem &item) {
+    /* TODO: Allow selecting time format */
+    char       timebuf[32];
+    struct tm *tm   = localtime(&item.time);
+    strftime(timebuf, 32, "%Y-%m-%dT%H:%M:%S", tm);
+    
+    std::list<std::stringstream> sss;
+    
+    switch(this->config.type) {
+        case ResourceMethodType::GET: {
+            std::string str(item.data.begin(), item.data.end());
+            sss.push_back(std::stringstream());
+            sss.back() << str;
         } break;
         case ResourceMethodType::PUT:
         case ResourceMethodType::POST: {
             std::list<ResourceFormatter *>::iterator it = this->fmts.begin();
             for(; it != this->fmts.end(); it++) {
                 sss.push_back(std::stringstream());
-                (*it)->decode(data, sss.back());
+                (*it)->decode(item.data, sss.back());
                 
                 if(this->config.cmd.size()) {
                     this->executeCmd(sss.back(), this->config.cmd);
@@ -113,8 +147,6 @@ void ResourceMethod::methodHandler(const coap_pdu_t *request, coap_pdu_t *respon
                     this->parentResource.setValue(sss.back().str());
                 }
             }
-            coap_pdu_set_code(response, COAP_RESPONSE_CODE_OK);
-            coap_pdu_set_type(response, COAP_MESSAGE_ACK);
         } break;
         case ResourceMethodType::DELETE:
         case ResourceMethodType::FETCH:
@@ -129,18 +161,16 @@ void ResourceMethod::methodHandler(const coap_pdu_t *request, coap_pdu_t *respon
      * timestamp on each line. */
     logValue += timebuf;
     logValue += " | " + this->parentResource.getPath() + ":" + this->methStringify(this->config.type) + ": ";
-    
+
     std::list<std::stringstream>::iterator sit = sss.begin();
     for(; sit != sss.end(); sit++) {
         if(this->config.printValue) {
             std::cout << logValue << (*sit).str() << std::endl;
         }
         if(this->config.logValue) {
-            log << logValue << (*sit).str() << std::endl;
+            this->parentResource.writeLog(logValue + (*sit).str());
         }
     }
-}
 
-ResourceMethodType ResourceMethod::getMethodType() {
-    return this->config.type;
+    return 0;
 }

@@ -5,13 +5,14 @@
 
 #include "coap3/coap.h"
 
-Resource::Resource(ResourceConfig &_config) :
-config(_config) {
+Resource::Resource(ResourceConfig &_config, RequestQueue &_queue) :
+config(_config),
+queue(_queue) {
     std::list<ResourceMethodConfig> &methodConfigs = this->config.methods;
 
     std::list<ResourceMethodConfig>::iterator it = methodConfigs.begin();
     for(; it != methodConfigs.end(); it++) {
-        this->methods.push_back(ResourceMethod(*this, *it));
+        this->methods.push_back(ResourceMethod(*this, *it, this->queue));
         if(it->logValue && !this->logFile.is_open()) {
             if(this->config.logFile.size()) {
                 if(this->config.logFile.find(std::filesystem::path::preferred_separator) != std::string::npos) {
@@ -92,7 +93,7 @@ void Resource::handleCoAPRequest(const coap_pdu_t *request, coap_pdu_t *response
     std::list<ResourceMethod>::iterator it = this->methods.begin();
     for(; it != this->methods.end(); it++) {
         if(it->getMethodType() == method) {
-            it->methodHandler(request, response, data, this->logFile);
+            it->methodHandler(request, response, data);
             break;
         }
     }
@@ -205,6 +206,10 @@ int Resource::sessionGetData(const coap_pdu_t *request, coap_pdu_t *response, co
     }
 
     return 0;
+}
+
+void Resource::writeLog(const std::string &str) {
+    this->logFile << str << std::endl;
 }
 
 

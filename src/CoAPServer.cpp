@@ -6,7 +6,8 @@
 
 #include "CoAPServer.hpp"
 
-CoAPServer::CoAPServer(Config &_config) {
+CoAPServer::CoAPServer(Config &_config, RequestQueue &_queue) :
+queue(_queue) {
     this->endpoint = _config.getEndpoint();
 
     std::list<ResourceConfig> &resConf = _config.getResources();
@@ -16,7 +17,7 @@ CoAPServer::CoAPServer(Config &_config) {
         if(it->dynamic) {
             this->dynamicResources.push_back(*it);
         } else {
-            this->resources.push_back(new Resource(*it));
+            this->resources.push_back(new Resource(*it, this->queue));
         }
     }
 }
@@ -170,7 +171,7 @@ void CoAPServer::handleDynamicRequest(const coap_pdu_t *request, coap_pdu_t *res
             cfg->resourceName   = _regexReplace(cfg->resourceName, sm);
             cfg->logFile        = _regexReplace(cfg->logFile, sm);
 
-            Resource *res = new Resource(*cfg);
+            Resource *res = new Resource(*cfg, this->queue);
             if(res == nullptr) {
                 std::cerr << "ERROR: Could not create Resource object" << std::endl;
                 coap_pdu_set_code(response, COAP_RESPONSE_CODE_INTERNAL_ERROR);

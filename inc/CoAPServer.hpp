@@ -8,12 +8,15 @@
 
 #include "Config.hpp"
 #include "Resource.hpp"
+#include "RequestQueue.hpp"
 
 class CoAPServer {
     private:
         coap_context_t  *ctx = nullptr;
         coap_address_t   addr;
         coap_endpoint_t *endp = nullptr;
+
+        RequestQueue    &queue;
 
         std::list<Resource*> resources;
 
@@ -27,7 +30,7 @@ class CoAPServer {
         static void dynamicResourceHandler(coap_resource_t *resource, coap_session_t *session, const coap_pdu_t *request,
                                            const coap_string_t *query, coap_pdu_t *response);
     public:
-        CoAPServer(Config &_config);
+        CoAPServer(Config &_config, RequestQueue &_queue);
 
         int start();
         

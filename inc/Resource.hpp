@@ -9,10 +9,13 @@
 
 #include "Config.hpp"
 #include "ResourceMethod.hpp"
+#include "RequestQueue.hpp"
 
 class Resource {
     private:
         ResourceConfig &config;
+
+        RequestQueue   &queue;
 
         std::list<ResourceMethod> methods;
         
@@ -29,7 +32,7 @@ class Resource {
         int sessionGetData(const coap_pdu_t *request, coap_pdu_t *response, coap_session_t *session, std::vector<uint8_t> &dataOut);
 
     public:
-        Resource(ResourceConfig &_config);
+        Resource(ResourceConfig &_config, RequestQueue &_queue);
 
         int attach(coap_context_t *ctx);
 
@@ -41,6 +44,8 @@ class Resource {
         std::string getPath();
 
         unsigned    getMaxAge();
+
+        void        writeLog(const std::string &str);
 };
 
 #endif /* _RESOURCE_HPP_ */
