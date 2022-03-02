@@ -1,10 +1,11 @@
 #ifndef _CONFIG_HPP_
 #define _CONFIG_HPP_
 
+#include <memory>
 #include <string>
 #include <list>
 
-#include <nlohmann/json.hpp>
+#include <nlohmann/json_fwd.hpp>
 
 enum class ResourceMethodType {
     None = 0,
@@ -99,7 +100,7 @@ struct EndpointConfig {
 
 class Config {
     private:
-        nlohmann::json config;
+        nlohmann::json *config;
 
         EndpointConfig            endpoint;
         std::list<ResourceConfig> resources;

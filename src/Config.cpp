@@ -6,39 +6,40 @@
 
 #include "Config.hpp"
 
-Config::Config(std::string path) {
+Config::Config(std::string path) :
+config(new nlohmann::json()) {
     std::ifstream in(path);
     if(in.fail()) {
         throw std::runtime_error("Could not open config file '" + path + "' for reading!");
     }
 
-    in >> this->config;
+    in >> *this->config;
 
     std::list<TemplateConfig>   templates;
     std::list<TemplateInstance> templateInstances;
 
-    if(this->config.contains("endpoint") && this->config["endpoint"].is_object()) {
-        this->endpoint = EndpointConfig(this->config["endpoint"]);
+    if(this->config->contains("endpoint") && this->config->operator[]("endpoint").is_object()) {
+        this->endpoint = EndpointConfig(this->config->operator[]("endpoint"));
     }
     
-    if(this->config.contains("resources") && this->config["resources"].is_array()) {
-        nlohmann::json jsonResources = this->config["resources"];
+    if(this->config->contains("resources") && this->config->operator[]("resources").is_array()) {
+        nlohmann::json jsonResources = this->config->operator[]("resources");
         nlohmann::json::iterator it;
         for(it = jsonResources.begin(); it != jsonResources.end(); it++) {
             this->resources.push_back(ResourceConfig(*it));
         }
     }
     
-    if(this->config.contains("templates") && this->config["templates"].is_array()) {
-        nlohmann::json jsonTemplates = this->config["templates"];
+    if(this->config->contains("templates") && this->config->operator[]("templates").is_array()) {
+        nlohmann::json jsonTemplates = this->config->operator[]("templates");
         nlohmann::json::iterator it;
         for(it = jsonTemplates.begin(); it != jsonTemplates.end(); it++) {
             templates.push_back(TemplateConfig(*it));
         }
     }
     
-    if(this->config.contains("template-instances") && this->config["template-instances"].is_array()) {
-        nlohmann::json jsonInstances = this->config["template-instances"];
+    if(this->config->contains("template-instances") && this->config->operator[]("template-instances").is_array()) {
+        nlohmann::json jsonInstances = this->config->operator[]("template-instances");
         nlohmann::json::iterator it;
         for(it = jsonInstances.begin(); it != jsonInstances.end(); it++) {
             templateInstances.push_back(TemplateInstance(*it));
