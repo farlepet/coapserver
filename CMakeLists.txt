@@ -30,7 +30,7 @@ option(DEBUG "Enable debugging symbols" OFF)
 # Required libraries
 find_library(COAP_LIBRARY
              NAMES coap-3 coap-3-gnutls coap-3-openssl coap-3-tinydtls coap-3-mbedtls)
-find_package(Boost 1.45.0 COMPONENTS program_options)
+find_package(Boost 1.65.0 COMPONENTS program_options)
 # Optional libraries
 find_package(msgpack)
 
@@ -49,6 +49,9 @@ if(DEBUG)
     message(STATUS "Enabling debug symbols")
     set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -g")
 endif()
+
+# Enable pthread support
+set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -pthread")
 
 # Resource Formatters
 add_library(ResourceFormatters

@@ -23,9 +23,7 @@ Current Features:
     - Currently no support for multi-block responses
 
 Planned Features:
- - Improved documentation
- - Set a resource's value from an external program
- - Encoding responses to a GET request
+ - See GitHub issues: https://github.com/farlepet/coapserver/issues
 
 Requirements:
  - `g++`/`clang++`
@@ -33,7 +31,8 @@ Requirements:
  - `cmake`
  - libcoap 3: https://github.com/obgm/libcoap
  - nlohmann JSON: https://github.com/nlohmann/json
- - boost: https://www.boost.org/
+   - Extra header (`nlohmann/json_fwd.hpp`) required - used to speed up compilation
+ - boost >= 1.65.0: https://www.boost.org/
 
 Optional:
  - msgpack-c: https://github.com/msgpack/msgpack-c/tree/cpp_master
@@ -64,9 +63,7 @@ Data Flow
 ---------
 
 PUT/POST:
-
-  Request -> Formatter -> Command -> Log
+ - Request -> Formatter -> Command -> Log
 
 GET:
-
-  Command -> Requestor
+ - Command -> Requestor
