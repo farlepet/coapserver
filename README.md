@@ -15,6 +15,8 @@ Current Features:
     - `HEX`     - Raw data represented as hex
     - `BASE64`  - Raw data represented as base64
  - Logging to a separate file for each resource
+ - Execute external command on request data
+   - By piping request data via stdin, or passing in via environment variable
  - Templated resource configuration for creating multiple similar resources
  - Regex-based on-the-fly resource creation
  - Multi-block requests
@@ -22,7 +24,6 @@ Current Features:
 
 Planned Features:
  - Improved documentation
- - Run commands with request data
  - Set a resource's value from an external program
  - Encoding responses to a GET request
 
@@ -59,3 +60,13 @@ The following CMake options may be useful:
    - Choose which c++ compiler to use
    - Tested with `g++` and `clang++`
 
+Data Flow
+---------
+
+PUT/POST:
+
+  Request -> Formatter -> Command -> Log
+
+GET:
+
+  Command -> Requestor

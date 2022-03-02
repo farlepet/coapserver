@@ -81,14 +81,18 @@ ResourceMethodType ResourceMethod::getMethodType() {
 int ResourceMethod::executeCmd(std::stringstream &data, std::string cmd) {
     std::string dataIn = data.str();
 
-    /* TODO: Format cmd if cmdstdin is false */
+    boost::process::environment env = boost::this_process::environment();
+    env["COAPSERVER_PAYLOAD"]  = dataIn;
+    env["COAPSERVER_RESOURCE"] = this->parentResource.getPath();
+    env["COAPSERVER_METHOD"]   = this->methStringify(this->config.type);
 
     boost::process::ipstream cstdout;
     boost::process::opstream cstdin;
 
     boost::process::child cproc(cmd,
                                 boost::process::std_out > cstdout,
-                                boost::process::std_in < cstdin);
+                                boost::process::std_in < cstdin,
+                                env);
 
     if(this->config.cmdStdin) {
         cstdin << dataIn;
