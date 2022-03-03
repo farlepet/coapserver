@@ -104,8 +104,6 @@ struct EndpointConfig {
 
 class Config {
     private:
-        nlohmann::json *config;
-
         EndpointConfig            endpoint;
         std::list<ResourceConfig> resources;
 
