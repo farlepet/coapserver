@@ -59,6 +59,16 @@ The following CMake options may be useful:
    - Choose which c++ compiler to use
    - Tested with `g++` and `clang++`
 
+Docker
+------
+Building container image:
+
+    docker build -t coapserver .
+
+Running example:
+
+    docker run -it --rm -p 5683:5683 --mount type=bind,source=$PWD/config.json,target=/config.json,Z coapserver -c /config.json
+
 Data Flow
 ---------
 
