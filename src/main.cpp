@@ -21,7 +21,7 @@ static int _requestQueueThread(RequestQueue &);
 static std::atomic<bool> _exit_now = false;
 
 static void _signal_handler(int sig) {
-    std::cerr << "Received SIG" << sigabbrev_np(sig) << " - Exiting..." << std::endl;
+    std::cerr << "Received signal " << strsignal(sig) << " - Exiting..." << std::endl;
     _exit_now = true;
 }
 
