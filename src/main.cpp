@@ -58,10 +58,11 @@ int main(int argc, char **argv) {
 
 static int _requestQueueThread(RequestQueue &queue) {
     while(1) {
-        if(queue.count()) {
+        while(queue.count()) {
             RequestQueueItem item = queue.dequeue();
             item.src->handleRequestQueueItem(item);
         }
+        std::this_thread::sleep_for(std::chrono::milliseconds(10));
     }
 }
 
