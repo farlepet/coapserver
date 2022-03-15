@@ -1,5 +1,7 @@
 #include <thread>
+#include <atomic>
 #include <iostream>
+#include <signal.h>
 #include <boost/program_options.hpp>
 
 #include "Config.hpp"
@@ -15,6 +17,13 @@ typedef struct {
 
 static int _handleCmdLine(int, char **, options_t &);
 static int _requestQueueThread(RequestQueue &);
+
+static std::atomic<bool> _exit_now = false;
+
+static void _signal_handler(int sig) {
+    std::cerr << "Received SIG" << sigabbrev_np(sig) << " - Exiting..." << std::endl;
+    _exit_now = true;
+}
 
 int main(int argc, char **argv) {
     options_t options;
@@ -49,21 +58,33 @@ int main(int argc, char **argv) {
     RequestQueue rQueue(options.queueSize);
     CoAPServer   coap(conf, rQueue);
 
+    signal(SIGINT, _signal_handler);
+
     std::thread rQueueThread(_requestQueueThread, std::ref(rQueue));
 
-    coap.start();
+    coap.init();
+
+    while(_exit_now == false) {
+        coap.exec(200);
+    }
+
+    rQueueThread.join();
+
+    coap.exit();
 
     return 0;
 }
 
 static int _requestQueueThread(RequestQueue &queue) {
-    while(1) {
+    while(_exit_now == false) {
         while(queue.count()) {
             RequestQueueItem item = queue.dequeue();
             item.src->handleRequestQueueItem(item);
         }
         std::this_thread::sleep_for(std::chrono::milliseconds(10));
     }
+
+    return 0;
 }
 
 namespace po = boost::program_options;

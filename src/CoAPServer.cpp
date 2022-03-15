@@ -22,7 +22,7 @@ queue(_queue) {
     }
 }
 
-int CoAPServer::start() {
+int CoAPServer::init() {
     int ret = 0;
     
     std::cerr << "Binding to " << this->endpoint.address << ":"
@@ -66,15 +66,22 @@ int CoAPServer::start() {
         coap_cache_ignore_options(this->ctx, cache_ignore_options, sizeof(cache_ignore_options) / sizeof(cache_ignore_options[0]));
     }
 
-    while(!ret) {
-        /* TODO: Spawn thread */
-        coap_io_process(this->ctx, COAP_IO_WAIT);
-    }
+    return ret;
+}
 
+int CoAPServer::exit(void) {
     coap_free_context(ctx);
     coap_cleanup();
-    
-    return ret;
+
+    return 0;
+}
+
+int CoAPServer::exec(uint32_t timeout_ms) {
+    if(coap_io_process(this->ctx, timeout_ms) < 0) {
+        return -1;
+    }
+
+    return 0;
 }
 
 int CoAPServer::resolveAddress(std::string host, std::string service, coap_address_t &addr) {

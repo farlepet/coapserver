@@ -32,8 +32,29 @@ class CoAPServer {
     public:
         CoAPServer(Config &_config, RequestQueue &_queue);
 
-        int start();
-        
+        /**
+         * @brief Initialize CoAP server
+         *
+         * @return int 0 on sucess, else non-zero
+         */
+        int init(void);
+
+        /**
+         * @brief Tear down CoAP server
+         *
+         * @return int 0 on success, else non-zero
+         */
+        int exit(void);
+
+        /**
+         * @brief Listen for incoming connedtions
+         *
+         * @param timeout_ms How long to wait for packets
+         *
+         * @return int 0 on success, else non-zero
+         */
+        int exec(uint32_t timeout_ms);
+
         void handleDynamicRequest(const coap_pdu_t *request, coap_pdu_t *response, coap_session_t *session, ResourceMethodType method);
 };
 
