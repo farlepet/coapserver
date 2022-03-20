@@ -2,6 +2,7 @@
 FROM alpine:3.15 AS build
 RUN apk add --no-cache g++ make cmake libcoap-dev boost-dev nlohmann-json
 
+# Build coapserver
 COPY . /opt/coapserver
 RUN set -ex;                         \
     rm -rf /opt/coapserver/build;    \
@@ -9,7 +10,6 @@ RUN set -ex;                         \
     cd /opt/coapserver/build;        \
     cmake .. -DDISABLE_MSGPACK=true; \
     make
-
 
 FROM alpine:3.15 AS runtime
 

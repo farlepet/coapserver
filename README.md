@@ -63,11 +63,18 @@ Docker
 ------
 Building container image:
 
+    # Build base coapserver image
     docker build -t coapserver .
+    # Build extra coapserver image - optional (base image must be build first)
+    # Adds extra tools including cbor2json, msgpack2json, lz4, gzip, and xz
+    docker build -f Dockerfile.extra -t coapserver-extra .
 
 Running example:
 
-    docker run -it --rm -p 5683:5683 --mount type=bind,source=$PWD/config.json,target=/config.json,Z coapserver -c /config.json
+    docker run -it --rm -p 5683:5683/udp \
+               --mount type=bind,source=$PWD/config.json,target=/config.json,Z \
+               --mount type=bind,source=$PWD/logs/,target=/var/log/coapserver,Z \
+               coapserver -c /config.json -l /var/log/coapserver
 
 Data Flow
 ---------
