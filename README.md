@@ -10,7 +10,6 @@ Current Features:
     - PUT,POST: Print the sent data, and/or set the current value of the resource
  - Resource observation
  - Multiple data format support
-    - `MSGPACK` - Decode data as MSGPACK
     - `STRING`  - Plaintext
     - `HEX`     - Raw data represented as hex
     - `BASE64`  - Raw data represented as base64
@@ -52,9 +51,6 @@ General build process:
     make
 
 The following CMake options may be useful:
- - `-DDISABLE_MSGPACK=<YES/NO>`
-   - Default: NO
-   - Choose whether or not to compile in MSGPACK support
  - `-DCMAKE_CXX_COMPILER=<...>`
    - Choose which c++ compiler to use
    - Tested with `g++` and `clang++`

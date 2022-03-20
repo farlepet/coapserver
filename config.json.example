@@ -24,7 +24,7 @@
                     "store": true
                 },
                 "PUSH": {
-                    "format": "MSGPACK",
+                    "format": "HEX",
                     "print": true,
                     "log": true
                 }
@@ -41,7 +41,7 @@
                     "log": true
                 },
                 "POST": {
-                    "format": ["MSGPACK","HEX"],
+                    "format": ["BASE64","HEX"],
                     "print": true,
                     "log": true
                 }
@@ -108,11 +108,11 @@
     "template-instances": [
         {
             "template": "example",
-            "template-args": [ "test_device_1", "12345", "MSGPACK" ]
+            "template-args": [ "test_device_1", "12345", "BASE64" ]
         },
         {
             "template": "example",
-            "template-args": [ "test_device_2", "76543", "MSGPACK" ]
+            "template-args": [ "test_device_2", "76543", "HEX" ]
         }
     ]
 }

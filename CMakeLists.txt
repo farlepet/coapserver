@@ -24,15 +24,12 @@ if(CMAKE_CXX_COMPILER_ID STREQUAL "Clang")
 endif()
 
 # Options
-option(DISABLE_MSGPACK "Disable MSGPACK decoding support" OFF)
 option(DEBUG "Enable debugging symbols" OFF)
 
 # Required libraries
 find_library(COAP_LIBRARY
              NAMES coap-3 coap-3-gnutls coap-3-openssl coap-3-tinydtls coap-3-mbedtls)
 find_package(Boost 1.65.0 COMPONENTS program_options)
-# Optional libraries
-find_package(msgpack)
 
 # Library checks
 if(COAP_LIBRARY)
@@ -59,16 +56,6 @@ add_library(ResourceFormatters
             ${CMAKE_CURRENT_LIST_DIR}/src/ResourceFormatter/ResourceFormatterText.cpp
             ${CMAKE_CURRENT_LIST_DIR}/src/ResourceFormatter/ResourceFormatterBase64.cpp)
 
-if(msgpack_FOUND AND (DISABLE_MSGPACK STREQUAL OFF))
-    message(STATUS "Compiling with MSGPACK support")
-    set(USE_MSGPACK ON)
-    target_sources(ResourceFormatters PRIVATE
-                   ${CMAKE_CURRENT_LIST_DIR}/src/ResourceFormatter/ResourceFormatterMsgpack.cpp)
-else()
-    message(STATUS "Compiling without MSGPACK support")
-    set(USE_MSGPACK OFF)
-endif()
-            
 
 configure_file(${CMAKE_CURRENT_LIST_DIR}/inc/config.h.in
                ${CMAKE_CURRENT_BINARY_DIR}/inc/config.h)
