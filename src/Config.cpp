@@ -80,6 +80,9 @@ EndpointConfig::EndpointConfig(nlohmann::json &_json) {
     if(_json.contains("port") && _json["port"].is_string()) {
         this->port = _json["port"];
     }
+    if(_json.contains("logDir") && _json["logDir"].is_string()) {
+        this->logDir = _json["logDir"];
+    }
 }
 
 ResourceConfig::ResourceConfig(nlohmann::json &_json) {

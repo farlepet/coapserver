@@ -1,7 +1,8 @@
 {
     "endpoint": {
         "address": "0.0.0.0",
-        "port": "5683"
+        "port":    "5683",
+        "logDir":  "logs"
     },
     "resources": [
         {
@@ -10,7 +11,7 @@
             "value": "12345",
             "observable": true,
             "maxage": 240,
-            "logfile": "logs/res1.log",
+            "logfile": "res1.log",
             "methods": {
                 "GET": {
                     "format": "STRING",
@@ -32,7 +33,7 @@
         {
             "name": "Example Resource 2",
             "path": "example/res2",
-            "logfile": "logs/res2.log",
+            "logfile": "res2.log",
             "methods": {
                 "PUT": {
                     "format": "HEX",
@@ -50,7 +51,7 @@
             "name": "Dynamic resource",
             "dynamic": true,
             "path": "dyn/(.*)/val([0-9]*)",
-            "logfile": "logs/dynamic/$1/value-$2.log",
+            "logfile": "dynamic/$1/value-$2.log",
             "methods": {
                 "PUT": {
                     "format": "STRING",
@@ -66,7 +67,7 @@
         {
             "name": "Example Command",
             "path": "notify",
-            "logfile": "logs/notify.log",
+            "logfile": "notify.log",
             "methods": {
                 "PUT": {
                     "format":     "STRING",
@@ -88,7 +89,7 @@
                 {
                     "name": "$1 Resource",
                     "path": "device/$2",
-                    "logfile": "logs/$1.log",
+                    "logfile": "$1.log",
                     "methods": {
                         "POST": {
                             "format": "$3",

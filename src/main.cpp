@@ -12,6 +12,7 @@ typedef struct {
     std::string configPath;
     std::string portOverride;
     std::string addrOverride;
+    std::string logDirOverride;
     size_t      queueSize;
 } options_t;
 
@@ -53,6 +54,9 @@ int main(int argc, char **argv) {
     if(options.addrOverride.size()) {
         /* TODO: Check address format */
         conf.getEndpoint().address = options.addrOverride;
+    }
+    if(options.logDirOverride.size()) {
+        conf.getEndpoint().logDir = options.logDirOverride;
     }
 
     RequestQueue rQueue(options.queueSize);
@@ -98,6 +102,7 @@ static int _handleCmdLine(int argc, char **argv, options_t &_options) {
         ("config,c", po::value<std::string>(&_options.configPath)->default_value("config.json"), "Configuration file")
         ("port,p",   po::value<std::string>(&_options.portOverride),                             "Override listening port")
         ("addr,a",   po::value<std::string>(&_options.addrOverride),                             "Override listening address")
+        ("logdir,l", po::value<std::string>(&_options.logDirOverride),                           "Override base log directory")
         ("queue,q",  po::value<size_t>     (&_options.queueSize)->default_value(32),             "Set request handler queue size");
 
     po::variables_map vmap;

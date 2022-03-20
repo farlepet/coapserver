@@ -5,7 +5,7 @@
 
 #include "coap3/coap.h"
 
-Resource::Resource(ResourceConfig &_config, RequestQueue &_queue) :
+Resource::Resource(ResourceConfig &_config, RequestQueue &_queue, std::string &_logDir) :
 config(_config),
 queue(_queue) {
     std::list<ResourceMethodConfig> &methodConfigs = this->config.methods;
@@ -15,13 +15,22 @@ queue(_queue) {
         this->methods.push_back(ResourceMethod(*this, *it, this->queue));
         if(it->logValue && !this->logFile.is_open()) {
             if(this->config.logFile.size()) {
-                if(this->config.logFile.find(std::filesystem::path::preferred_separator) != std::string::npos) {
-                    /* File is nested in a directory, make sure it exists. */
-                    std::filesystem::create_directories(std::filesystem::path(this->config.logFile).parent_path());
+                /* Prepend configured log directory, if present. */
+                std::string logDir;
+                if(_logDir.size()) {
+                    logDir = _logDir + std::filesystem::path::preferred_separator + this->config.logFile;
+                } else {
+                    logDir = this->config.logFile;
                 }
-                this->logFile.open(this->config.logFile, std::fstream::out | std::fstream::app);
+
+                if(logDir.find(std::filesystem::path::preferred_separator) != std::string::npos) {
+                    /* File is nested in a directory, make sure it exists. */
+                    std::filesystem::create_directories(std::filesystem::path(logDir).parent_path());
+                }
+
+                this->logFile.open(logDir, std::fstream::out | std::fstream::app);
                 if(this->logFile.fail()) {
-                    throw std::runtime_error("Failed to open log file " + this->config.logFile + " for resource " + this->config.resourcePath);
+                    throw std::runtime_error("Failed to open log file " + logDir + " for resource " + this->config.resourcePath);
                 }
             } else {
                 throw std::runtime_error("Resource method requests logging, but resource " + this->config.resourcePath + " has no defined log file");

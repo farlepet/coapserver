@@ -32,7 +32,7 @@ class Resource {
         int sessionGetData(const coap_pdu_t *request, coap_pdu_t *response, coap_session_t *session, std::vector<uint8_t> &dataOut);
 
     public:
-        Resource(ResourceConfig &_config, RequestQueue &_queue);
+        Resource(ResourceConfig &_config, RequestQueue &_queue, std::string &_logDir);
 
         int attach(coap_context_t *ctx);
 

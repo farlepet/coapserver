@@ -17,7 +17,7 @@ queue(_queue) {
         if(it->dynamic) {
             this->dynamicResources.push_back(*it);
         } else {
-            this->resources.push_back(new Resource(*it, this->queue));
+            this->resources.push_back(new Resource(*it, this->queue, this->endpoint.logDir));
         }
     }
 }
@@ -178,7 +178,7 @@ void CoAPServer::handleDynamicRequest(const coap_pdu_t *request, coap_pdu_t *res
             cfg->resourceName   = _regexReplace(cfg->resourceName, sm);
             cfg->logFile        = _regexReplace(cfg->logFile, sm);
 
-            Resource *res = new Resource(*cfg, this->queue);
+            Resource *res = new Resource(*cfg, this->queue, this->endpoint.logDir);
             if(res == nullptr) {
                 std::cerr << "ERROR: Could not create Resource object" << std::endl;
                 coap_pdu_set_code(response, COAP_RESPONSE_CODE_INTERNAL_ERROR);

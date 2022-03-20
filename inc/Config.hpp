@@ -97,6 +97,8 @@ struct EndpointConfig {
     std::string address = "0.0.0.0";
     /** Port to bind to */
     std::string port    = "5683";
+    /** Directory in which to store log files */
+    std::string logDir  = "";
 
     EndpointConfig(nlohmann::json &_json);
     EndpointConfig() {}
