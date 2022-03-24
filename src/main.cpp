@@ -64,9 +64,12 @@ int main(int argc, char **argv) {
 
     signal(SIGINT, _signal_handler);
 
-    std::thread rQueueThread(_requestQueueThread, std::ref(rQueue));
 
-    coap.init();
+    if(coap.init()) {
+        return -1;
+    }
+
+    std::thread rQueueThread(_requestQueueThread, std::ref(rQueue));
 
     while(_exit_now == false) {
         coap.exec(200);

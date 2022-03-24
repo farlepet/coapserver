@@ -1,7 +1,7 @@
 Coap Server
 ===========
 
-This CoAP server is designed to be highly configurable to allow it's use with a
+This CoAP server is designed to be highly configurable to allow its use with a
 variety of IoT devices, for testing or for low-scale use.
 
 __Docker images__:
@@ -11,6 +11,8 @@ __Docker images__:
 [![Docker Image Version (latest by date)](https://img.shields.io/docker/v/farlepet/coapserver-extra?label=coapserver-extra)](https://hub.docker.com/r/farlepet/coapserver-extra)
 
 __Current Features__:
+ - CoAP via UDP, DTLS, TCP, and TLS
+    - Currently only PEM keys/certificates are supported
  - GET, PUT, and POST
     - GET: Returns the value of the resource
     - PUT,POST: Print the sent data, and/or set the current value of the resource

@@ -1,5 +1,6 @@
 #include <iostream>
 #include <regex>
+#include <sys/stat.h>
 #include <sys/types.h>
 #include <sys/socket.h>
 #include <netdb.h>
@@ -10,8 +11,16 @@ CoAPServer::CoAPServer(Config &_config, RequestQueue &_queue) :
 queue(_queue) {
     this->endpoint = _config.getEndpoint();
 
+    if((this->endpoint.transport == EndpointTransport::DTLS) &&
+       !coap_dtls_is_supported()) {
+        throw std::runtime_error("ERROR: Configured for DTLS, but libcoap was not compiled with DTLS support!");
+    } else if((this->endpoint.transport == EndpointTransport::TLS) &&
+              !coap_tls_is_supported()) {
+        throw std::runtime_error("ERROR: Configured for TLS, but libcoap was not compiled with TLS support!");
+    }
+
     std::list<ResourceConfig> &resConf = _config.getResources();
-    
+
     std::list<ResourceConfig>::iterator it = resConf.begin();
     for(; it != resConf.end(); it++) {
         if(it->dynamic) {
@@ -24,21 +33,36 @@ queue(_queue) {
 
 int CoAPServer::init() {
     int ret = 0;
-    
+
     std::cerr << "Binding to " << this->endpoint.address << ":"
               << this->endpoint.port << std::endl;
-    
+
+    coap_proto_t coap_protocol = (this->endpoint.transport == EndpointTransport::UDP)  ? COAP_PROTO_UDP  :
+                                 (this->endpoint.transport == EndpointTransport::DTLS) ? COAP_PROTO_DTLS :
+                                 (this->endpoint.transport == EndpointTransport::TCP)  ? COAP_PROTO_TCP  :
+                                 (this->endpoint.transport == EndpointTransport::TLS)  ? COAP_PROTO_TLS  : COAP_PROTO_NONE;
+
     if(!CoAPServer::resolveAddress(this->endpoint.address, this->endpoint.port, this->addr)) {
         std::cerr << "ERROR: Failed to resolve address." << std::endl;
         ret = 1;
     } else if(!(this->ctx = coap_new_context(nullptr))) {
         std::cerr << "ERROR: Could not create CoAP context." << std::endl;
         ret = 1;
-    } else if(!(this->endp = coap_new_endpoint(this->ctx, &this->addr, COAP_PROTO_UDP))) {
+    }
+
+    if((this->endpoint.transport == EndpointTransport::DTLS) ||
+       (this->endpoint.transport == EndpointTransport::TLS)) {
+        if(this->setupSecurity()) {
+            std::cerr << "ERROR: Could not set up security." << std::endl;
+            ret = 1;
+        }
+    }
+
+    if(!ret && !(this->endp = coap_new_endpoint(this->ctx, &this->addr, coap_protocol))) {
         std::cerr << "ERROR: Could not add CoAP endpoint." << std::endl;
         ret = 1;
     }
-    
+
     if(!ret) {
         std::list<Resource *>::iterator it = this->resources.begin();
         for(; it != this->resources.end(); it++) {
@@ -67,6 +91,67 @@ int CoAPServer::init() {
     }
 
     return ret;
+}
+
+int CoAPServer::setupSecurity(void) {
+    if(this->endpoint.security.key.size() == 0) {
+        std::cerr << "ERROR: Security requested, but no key provided" << std::endl;
+        return -1;
+    }
+    if(this->endpoint.security.cert.size() == 0) {
+        std::cerr << "ERROR: Security requested, but no certificate provided" << std::endl;
+        return -1;
+    }
+
+    this->dtls_pki = static_cast<coap_dtls_pki_t *>(malloc(sizeof(coap_dtls_pki_t)));
+    if(this->dtls_pki == nullptr) {
+        std::cerr << "ERROR: Could not allocate memory for DTLS structures" << std::endl;
+        return -1;
+    }
+
+    this->dtls_pki->version = COAP_DTLS_PKI_SETUP_VERSION;
+    /* TODO: Make configurable */
+    this->dtls_pki->verify_peer_cert        = 0;
+    this->dtls_pki->check_common_ca         = 1;
+    this->dtls_pki->allow_self_signed       = 1;
+    this->dtls_pki->allow_expired_certs     = 1;
+    this->dtls_pki->cert_chain_validation   = 1;
+    this->dtls_pki->cert_chain_verify_depth = 2;
+    this->dtls_pki->check_cert_revocation   = 1;
+    this->dtls_pki->allow_no_crl            = 1;
+    this->dtls_pki->allow_expired_crl       = 1;
+    this->dtls_pki->is_rpk_not_cert         = 0;
+
+    this->dtls_pki->validate_cn_call_back   = CoAPServer::dtlsValidateCNCallback;
+    this->dtls_pki->cn_call_back_arg        = this;
+    this->dtls_pki->validate_sni_call_back  = CoAPServer::dtlsValidateSNICallback;
+    this->dtls_pki->sni_call_back_arg       = &this->dtls_pki->pki_key;
+
+    this->dtls_pki->pki_key.key_type = COAP_PKI_KEY_PEM;
+    this->dtls_pki->pki_key.key.pem.public_cert = this->endpoint.security.cert.c_str();
+    this->dtls_pki->pki_key.key.pem.private_key = this->endpoint.security.key.c_str();
+    this->dtls_pki->pki_key.key.pem.ca_file     = this->endpoint.security.ca.c_str();
+
+    struct stat _stat;
+    if(stat(this->endpoint.security.cert.c_str(), &_stat)) {
+        std::cerr << "ERROR: Server certificate [" << this->endpoint.security.cert.c_str() << "] does not exist" << std::endl;
+        return -1;
+    }
+    if(stat(this->endpoint.security.key.c_str(), &_stat)) {
+        std::cerr << "ERROR: Server key [" << this->endpoint.security.key.c_str() << "] does not exist" << std::endl;
+        return -1;
+    }
+    if(stat(this->endpoint.security.key.c_str(), &_stat)) {
+        std::cerr << "ERROR: Certificate authority [" << this->endpoint.security.ca.c_str() << "] does not exist" << std::endl;
+        return -1;
+    }
+
+    if(!coap_context_set_pki(this->ctx, this->dtls_pki)) {
+        std::cerr << "ERROR: Could not set CoAP context PKI" << std::endl;
+        return -1;
+    }
+
+    return 0;
 }
 
 int CoAPServer::exit(void) {
@@ -129,7 +214,7 @@ static std::string _regexReplace(std::string in, std::smatch sm) {
                     i++;
                 }
                 i--;
-                
+
                 if(idx > sm.size()) {
                     std::cerr << "ERROR: Insufficient regex matches for template string: " << in << std::endl;
                     return "";
@@ -205,8 +290,27 @@ template<ResourceMethodType T>
 void CoAPServer::dynamicResourceHandler(coap_resource_t *resource, coap_session_t *session, const coap_pdu_t *request,
                                         const coap_string_t *query, coap_pdu_t *response) {
     (void)query;
-    
+
     CoAPServer *srv = static_cast<CoAPServer *>(coap_resource_get_userdata(resource));
 
     srv->handleDynamicRequest(request, response, session, T);
+}
+
+int CoAPServer::dtlsValidateCNCallback(const char *cn, const uint8_t *asn1_public_cert, size_t asn1_length,
+                                       coap_session_t *session, unsigned int depth, int validated, void *arg) {
+    (void)cn;
+    (void)asn1_public_cert;
+    (void)asn1_length;
+    (void)session;
+    (void)depth;
+    (void)validated;
+    (void)arg;
+    /* Not presently used */
+    return 1;
+}
+
+coap_dtls_key_t *CoAPServer::dtlsValidateSNICallback(const char *sni, void *arg) {
+    (void)sni;
+    /* We only support a single key set at this time */
+    return static_cast<coap_dtls_key_t *>(arg);
 }

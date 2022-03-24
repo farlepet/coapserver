@@ -92,6 +92,14 @@ struct TemplateConfig {
     void GenerateResources(std::list<ResourceConfig> &_resources, TemplateInstance &_instance);
 };
 
+enum class EndpointTransport {
+    NONE = 0,
+    UDP,
+    DTLS,
+    TCP,
+    TLS
+};
+
 struct EndpointConfig {
     /** Address to bind on */
     std::string address = "0.0.0.0";
@@ -99,8 +107,20 @@ struct EndpointConfig {
     std::string port    = "5683";
     /** Directory in which to store log files */
     std::string logDir  = "";
+    /** Which protocol to use. */
+    EndpointTransport transport = EndpointTransport::UDP;
 
-    EndpointConfig(nlohmann::json &_json);
+    /** Security settings */
+    struct {
+        /** Server private key */
+        std::string key  = "";
+        /** Server certificate */
+        std::string cert = "";
+        /** Certificate authority */
+        std::string ca   = "";
+    } security;
+
+    EndpointConfig(const nlohmann::json &_json);
     EndpointConfig() {}
 };
 

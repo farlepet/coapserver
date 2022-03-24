@@ -72,34 +72,59 @@ std::list<ResourceConfig> &Config::getResources() {
     return this->resources;
 }
 
+/**
+ * @brief Finds and stores a string from the given JSON object.
+ *
+ * @param _json JSON object to search
+ * @param _name Key to search for
+ * @param _outStr String to store into
+ *
+ * @return int 1 if found and stored, 0 otherwise
+ */
+static int _getString(const nlohmann::json &_json, const std::string &_name, std::string &_outStr) {
+    if(_json.contains(_name) && _json[_name].is_string()) {
+        _outStr = _json[_name];
+        return 1;
+    }
+    return 0;
+}
 
-EndpointConfig::EndpointConfig(nlohmann::json &_json) {
-    if(_json.contains("address") && _json["address"].is_string()) {
-        this->address = _json["address"];
+EndpointConfig::EndpointConfig(const nlohmann::json &_json) {
+    _getString(_json, "address",  this->address);
+    _getString(_json, "port",     this->port);
+    _getString(_json, "logDir",   this->logDir);
+
+    std::string _proto;
+    if(_getString(_json, "protocol", _proto)) {
+        if(_proto == "udp") {
+            this->transport = EndpointTransport::UDP;
+        } else if(_proto == "dtls") {
+            this->transport = EndpointTransport::DTLS;
+        } else if(_proto == "tcp") {
+            this->transport = EndpointTransport::TCP;
+        } else if(_proto == "tls") {
+            this->transport = EndpointTransport::TLS;
+        } else {
+            throw std::runtime_error("ERROR: Endpoint transport protocol \"" + _proto + "\" not recognized!");
+        }
     }
-    if(_json.contains("port") && _json["port"].is_string()) {
-        this->port = _json["port"];
-    }
-    if(_json.contains("logDir") && _json["logDir"].is_string()) {
-        this->logDir = _json["logDir"];
+
+    if(_json.contains("security") && _json["security"].is_object()) {
+        const nlohmann::json _security = _json["security"];
+        _getString(_security, "key",  this->security.key);
+        _getString(_security, "cert", this->security.cert);
+        _getString(_security, "ca",   this->security.ca);
     }
 }
 
 ResourceConfig::ResourceConfig(nlohmann::json &_json) {
-    if(_json.contains("name") && _json["name"].is_string()) {
-        this->resourceName = _json["name"];
-    }
-    if(_json.contains("path") && _json["path"].is_string()) {
-        this->resourcePath = _json["path"];
-    } else {
+    if(!_getString(_json, "path", this->resourcePath)) {
         throw std::runtime_error("ERROR: Resource does not include resource path!");
     }
-    if(_json.contains("value") && _json["value"].is_string()) {
-        this->initialValue = _json["value"];
-    }
-    if(_json.contains("logfile") && _json["logfile"].is_string()) {
-        this->logFile = _json["logfile"];
-    }
+    _getString(_json, "name",    this->resourceName);
+    _getString(_json, "value",   this->initialValue);
+    _getString(_json, "logfile", this->logFile);
+
     if(_json.contains("observable") && _json["observable"].is_boolean()) {
         this->observable = _json["observable"];
     }
@@ -172,12 +197,10 @@ ResourceMethodConfig::ResourceMethodConfig(nlohmann::json &_json, ResourceMethod
 }
 
 TemplateInstance::TemplateInstance(nlohmann::json &_json) {
-    if(_json.contains("template") && _json["template"].is_string()) {
-        this->templateId = _json["template"];
-    } else {
+    if(!_getString(_json, "template", this->templateId)) {
         throw std::runtime_error("ERROR: Template instance does not include template identifier!");
     }
-    
+
     if(_json.contains("template-args") && _json["template-args"].is_array()) {
         nlohmann::json args = _json["template-args"];
         nlohmann::json::iterator it;
@@ -194,15 +217,10 @@ TemplateInstance::TemplateInstance(nlohmann::json &_json) {
 }
 
 TemplateConfig::TemplateConfig(nlohmann::json &_json) {
-    if(_json.contains("name") && _json["name"].is_string()) {
-        this->templateName = _json["name"];
-    }
-
-    if(_json.contains("ident") && _json["ident"].is_string()) {
-        this->templateIdent = _json["ident"];
-    } else {
+    if(!_getString(_json, "ident", this->templateIdent)) {
         throw std::runtime_error("ERROR: Template config does not include identifier!");
     }
+    _getString(_json, "name",  this->templateName);
 
     if(_json.contains("resources") && _json["resources"].is_array()) {
         nlohmann::json _resources = _json["resources"];

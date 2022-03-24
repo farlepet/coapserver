@@ -12,9 +12,10 @@
 
 class CoAPServer {
     private:
-        coap_context_t  *ctx = nullptr;
+        coap_context_t  *ctx      = nullptr;
         coap_address_t   addr;
-        coap_endpoint_t *endp = nullptr;
+        coap_endpoint_t *endp     = nullptr;
+        coap_dtls_pki_t *dtls_pki = nullptr;
 
         RequestQueue    &queue;
 
@@ -29,6 +30,12 @@ class CoAPServer {
         template<ResourceMethodType T>
         static void dynamicResourceHandler(coap_resource_t *resource, coap_session_t *session, const coap_pdu_t *request,
                                            const coap_string_t *query, coap_pdu_t *response);
+
+        int setupSecurity(void);
+
+        static int dtlsValidateCNCallback(const char *cn, const uint8_t *asn1_public_cert, size_t asn1_length,
+                                          coap_session_t *session, unsigned int depth, int validated, void *arg);
+        static coap_dtls_key_t *dtlsValidateSNICallback(const char *sni, void *arg);
     public:
         CoAPServer(Config &_config, RequestQueue &_queue);
 
