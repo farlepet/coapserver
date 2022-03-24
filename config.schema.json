@@ -1,0 +1,97 @@
+{
+    "$schema": "https://json-schema.org/draft/2020-12/schema",
+    "type":    "object",
+    "properties": {
+        "endpoint": {
+            "type": "object",
+            "properties": {
+                "address":  { "type": "string" },
+                "port":     { "type": "string" },
+                "logDir":   { "type": "string" },
+                "protocol": { "type": "string", "pattern": "^(udp|dtls|tcp|tls)$" },
+                "security": {
+                    "type": "object",
+                    "properties": {
+                        "key":  { "type": "string" },
+                        "cert": { "type": "string" },
+                        "ca":   { "type": "string" }
+                    },
+                    "additionalProperties": false
+                },
+                "additionalProperties": false
+            },
+            "additionalProperties": false
+        },
+        "resources": {
+            "type": "array",
+            "items": {
+                "type": "object",
+                "properties": {
+                    "name":       { "type": "string"  },
+                    "path":       { "type": "string"  },
+                    "logfile":    { "type": "string"  },
+                    "value":      { "type": "string"  },
+                    "observable": { "type": "boolean" },
+                    "maxage":     { "type": "number", "minimum": 1 },
+                    "methods": {
+                        "type": "object",
+                        "patternProperties": {
+                            "^(GET|POST|PUT)$": {
+                                "type": "object",
+                                "properties": {
+                                    "format": {
+                                        "oneOf": [
+                                            { "type": "string", "pattern": "^(STRING|HEX|BASE64)$" },
+                                            { "type": "array", "items": {
+                                                "type": "string",
+                                                "pattern": "^(STRING|HEX|BASE64)$" } }
+                                        ]
+                                    },
+                                    "print": { "type": "boolean" },
+                                    "log":   { "type": "boolean" },
+                                    "store": { "type": "boolean" },
+                                    "cmd":   {
+                                        "oneOf": [
+                                            { "type": "string" },
+                                            { "type": "null" }
+                                        ]
+                                    },
+                                    "cmdstdin":    { "type": "boolean" },
+                                    "cmdloginput": { "type": "boolean" },
+                                    "cmdtimeout":  { "type": "number", "minimum": 20 }
+                                },
+                                "additionalProperties": false
+                            }
+                        },
+                        "additionalProperties": false
+                    }
+                }
+            }
+        },
+        "templates": {
+            "type": "array",
+            "items": {
+                "type": "object",
+                "properties": {
+                    "name":      { "type": "string" },
+                    "ident":     { "type": "string" },
+                    "args":      { "type": "array", "items": { "type": "string" } },
+                    "resources": { "$ref": "#/properties/resources" }
+                },
+                "additionalProperties": false
+            }
+        },
+        "template-instances": {
+            "type": "array",
+            "items": {
+                "type": "object",
+                "properties": {
+                    "template": { "type": "string" },
+                    "template-args": { "type": "array", "items": { "type": "string" } }
+                },
+                "additionalProperties": false
+            }
+        },
+        "additionalProperties": false
+    }
+}
