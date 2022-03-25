@@ -13,12 +13,12 @@
 
 class Resource {
     private:
-        ResourceConfig &config;
+        const ResourceConfig *config;
 
         RequestQueue   &queue;
 
-        std::list<ResourceMethod> methods;
-        
+        std::list<ResourceMethod *> methods;
+
         std::string value;
 
         coap_resource_t *res;
@@ -32,7 +32,9 @@ class Resource {
         int sessionGetData(const coap_pdu_t *request, coap_pdu_t *response, coap_session_t *session, std::vector<uint8_t> &dataOut);
 
     public:
-        Resource(ResourceConfig &_config, RequestQueue &_queue, std::string &_logDir);
+        Resource(const ResourceConfig *_config, RequestQueue &_queue, std::string &_logDir);
+
+        ~Resource(void);
 
         int attach(coap_context_t *ctx);
 

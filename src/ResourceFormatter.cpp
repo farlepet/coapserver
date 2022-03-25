@@ -12,7 +12,7 @@ ResourceFormatter::~ResourceFormatter() {
 
 }
 
-ResourceFormatter *ResourceFormatter::createResourceFormatter(std::string &_format) {
+ResourceFormatter *ResourceFormatter::createResourceFormatter(const std::string &_format) {
     if(_format == "STRING") {
         return new ResourceFormatterText();
     } else if(_format == "HEX") {

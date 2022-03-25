@@ -18,7 +18,7 @@ class Resource;
 
 class ResourceMethod {
     private:
-        ResourceMethodConfig &config;
+        const ResourceMethodConfig &config;
 
         Resource &parentResource;
 
@@ -31,8 +31,10 @@ class ResourceMethod {
         int executeCmd(std::stringstream &data, std::string cmd);
 
     public:
-        ResourceMethod(Resource &_parentResource, ResourceMethodConfig &_config, RequestQueue &_queue);
-        
+        ResourceMethod(Resource &_parentResource, const ResourceMethodConfig &_config, RequestQueue &_queue);
+
+        ~ResourceMethod(void);
+
         void methodHandler(const coap_pdu_t *request, coap_pdu_t *response, std::vector<std::uint8_t> &data);
 
         ResourceMethodType getMethodType();

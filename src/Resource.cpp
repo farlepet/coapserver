@@ -5,22 +5,22 @@
 
 #include "coap3/coap.h"
 
-Resource::Resource(ResourceConfig &_config, RequestQueue &_queue, std::string &_logDir) :
-config(_config),
+Resource::Resource(const ResourceConfig *_config, RequestQueue &_queue, std::string &_logDir) :
 queue(_queue) {
-    std::list<ResourceMethodConfig> &methodConfigs = this->config.methods;
+    this->config = _config;
+    const std::list<ResourceMethodConfig> &methodConfigs = this->config->methods;
 
-    std::list<ResourceMethodConfig>::iterator it = methodConfigs.begin();
+    std::list<ResourceMethodConfig>::const_iterator it = methodConfigs.begin();
     for(; it != methodConfigs.end(); it++) {
-        this->methods.push_back(ResourceMethod(*this, *it, this->queue));
+        this->methods.push_back(new ResourceMethod(*this, *it, this->queue));
         if(it->logValue && !this->logFile.is_open()) {
-            if(this->config.logFile.size()) {
+            if(this->config->logFile.size()) {
                 /* Prepend configured log directory, if present. */
                 std::string logDir;
                 if(_logDir.size()) {
-                    logDir = _logDir + std::filesystem::path::preferred_separator + this->config.logFile;
+                    logDir = _logDir + std::filesystem::path::preferred_separator + this->config->logFile;
                 } else {
-                    logDir = this->config.logFile;
+                    logDir = this->config->logFile;
                 }
 
                 if(logDir.find(std::filesystem::path::preferred_separator) != std::string::npos) {
@@ -30,30 +30,43 @@ queue(_queue) {
 
                 this->logFile.open(logDir, std::fstream::out | std::fstream::app);
                 if(this->logFile.fail()) {
-                    throw std::runtime_error("Failed to open log file " + logDir + " for resource " + this->config.resourcePath);
+                    throw std::runtime_error("Failed to open log file " + logDir + " for resource " + this->config->resourcePath);
                 }
             } else {
-                throw std::runtime_error("Resource method requests logging, but resource " + this->config.resourcePath + " has no defined log file");
+                throw std::runtime_error("Resource method requests logging, but resource " + this->config->resourcePath + " has no defined log file");
             }
         }
+    }
+}
+
+Resource::~Resource(void) {
+    std::list<ResourceMethod *>::iterator it = this->methods.begin();
+    for(; it != this->methods.end(); it++) {
+        delete *it;
+    }
+
+    /* This config was dynamically allocated by CoAPServer.
+     * Not the cleanest way to handle this. */
+    if(this->config->dynamic) {
+        delete this->config;
     }
 }
 
 int Resource::attach(coap_context_t *ctx) {
     coap_str_const_t *res_str;
 
-    std::cerr << "Attaching resource " << this->config.resourcePath << std::endl;
+    std::cerr << "Attaching resource " << this->config->resourcePath << std::endl;
 
-    res_str = coap_make_str_const(this->config.resourcePath.c_str());
+    res_str = coap_make_str_const(this->config->resourcePath.c_str());
     this->res = coap_resource_init(res_str, 0);
-    if(this->config.observable) {
+    if(this->config->observable) {
         coap_resource_set_get_observable(this->res, 1);
     }
 
     coap_resource_set_userdata(this->res, this);
-    std::list<ResourceMethod>::iterator it = this->methods.begin();
+    std::list<ResourceMethod *>::iterator it = this->methods.begin();
     for(; it != this->methods.end(); it++) {
-        switch(it->getMethodType()) {
+        switch((*it)->getMethodType()) {
             case ResourceMethodType::GET:
                 std::cerr << "  - Attaching GET handler" << std::endl;
                 coap_register_handler(this->res, COAP_REQUEST_GET, Resource::coapHandlerX<ResourceMethodType::GET>);
@@ -77,7 +90,7 @@ int Resource::attach(coap_context_t *ctx) {
     }
     coap_add_resource(ctx, this->res);
 
-    this->value = this->config.initialValue;
+    this->value = this->config->initialValue;
 
     return 0;
 }
@@ -99,17 +112,17 @@ void Resource::handleCoAPRequest(const coap_pdu_t *request, coap_pdu_t *response
         }
     }
 
-    std::list<ResourceMethod>::iterator it = this->methods.begin();
+    std::list<ResourceMethod *>::iterator it = this->methods.begin();
     for(; it != this->methods.end(); it++) {
-        if(it->getMethodType() == method) {
-            it->methodHandler(request, response, data);
+        if((*it)->getMethodType() == method) {
+            (*it)->methodHandler(request, response, data);
             break;
         }
     }
 }
 
 void Resource::setValue(std::string _value) {
-    if(this->config.observable) {
+    if(this->config->observable) {
         coap_resource_notify_observers(this->res, nullptr);
     }
     this->value = _value;
@@ -120,11 +133,11 @@ std::string Resource::getValue() {
 }
 
 std::string Resource::getPath() {
-    return this->config.resourcePath;
+    return this->config->resourcePath;
 }
 
 unsigned Resource::getMaxAge() {
-    return this->config.maxAge;
+    return this->config->maxAge;
 }
 
 static void

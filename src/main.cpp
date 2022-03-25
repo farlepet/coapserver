@@ -77,8 +77,6 @@ int main(int argc, char **argv) {
 
     rQueueThread.join();
 
-    coap.exit();
-
     return 0;
 }
 

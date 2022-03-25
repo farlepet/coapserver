@@ -19,7 +19,7 @@ class CoAPServer {
 
         RequestQueue    &queue;
 
-        std::list<Resource*> resources;
+        std::list<Resource *> resources;
 
         EndpointConfig endpoint;
 
@@ -39,19 +39,14 @@ class CoAPServer {
     public:
         CoAPServer(Config &_config, RequestQueue &_queue);
 
+        ~CoAPServer(void);
+
         /**
          * @brief Initialize CoAP server
          *
          * @return int 0 on sucess, else non-zero
          */
         int init(void);
-
-        /**
-         * @brief Tear down CoAP server
-         *
-         * @return int 0 on success, else non-zero
-         */
-        int exit(void);
 
         /**
          * @brief Listen for incoming connedtions

@@ -6,13 +6,20 @@
 #include "ResourceMethod.hpp"
 #include "Resource.hpp"
 
-ResourceMethod::ResourceMethod(Resource &_parentResource, ResourceMethodConfig &_config, RequestQueue &_queue) :
+ResourceMethod::ResourceMethod(Resource &_parentResource, const ResourceMethodConfig &_config, RequestQueue &_queue) :
 config(_config),
 parentResource(_parentResource),
 queue(_queue) {
-    std::list<std::string>::iterator it = _config.format.begin();
+    std::list<std::string>::const_iterator it = _config.format.begin();
     for(; it != _config.format.end(); it++) {
         this->fmts.push_back(ResourceFormatter::createResourceFormatter(*it));
+    }
+}
+
+ResourceMethod::~ResourceMethod(void) {
+    std::list<ResourceFormatter*>::iterator it = this->fmts.begin();
+    for(; it != this->fmts.end(); it++) {
+        delete *it;
     }
 }
 
