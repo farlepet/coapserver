@@ -9,7 +9,7 @@ RUN set -ex; \
     git clone https://github.com/ludocode/msgpack-tools.git; \
     cd msgpack-tools; \
     ./configure --prefix=/opt/msgpack-tools-bin; \
-    make; \
+    make -j $(nproc); \
     make install;
 
 FROM coapserver AS runtime
