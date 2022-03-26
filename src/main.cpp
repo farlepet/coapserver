@@ -62,8 +62,8 @@ int main(int argc, char **argv) {
     RequestQueue rQueue(options.queueSize);
     CoAPServer   coap(conf, rQueue);
 
-    signal(SIGINT, _signal_handler);
-
+    signal(SIGINT,  _signal_handler);
+    signal(SIGCHLD, SIG_IGN);
 
     if(coap.init()) {
         return -1;
