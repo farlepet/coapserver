@@ -28,7 +28,7 @@ option(DEBUG "Enable debugging symbols" OFF)
 
 # Required libraries
 find_library(COAP_LIBRARY
-             NAMES coap-3 coap-3-gnutls coap-3-openssl coap-3-tinydtls coap-3-mbedtls)
+             NAMES coap-3-gnutls coap-3-openssl coap-3-tinydtls coap-3-mbedtls coap-3)
 find_package(Boost 1.65.0 COMPONENTS program_options)
 
 # Library checks

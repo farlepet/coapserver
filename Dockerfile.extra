@@ -1,6 +1,6 @@
 # syntax=docker/dockerfile:1
 FROM alpine:3.15 AS build
-RUN apk add --no-cache g++ make cmake git curl
+RUN apk add --no-cache g++ make git curl
 
 # Build msgpack-tools
 RUN set -ex; \
