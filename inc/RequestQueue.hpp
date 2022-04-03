@@ -17,17 +17,17 @@ struct RequestQueueItem {
     /** Value of request */
     std::vector<uint8_t> data;
     /** Time of request */
-    time_t               time;
+    struct timeval       time;
 
     RequestQueueItem() {}
     
-    RequestQueueItem(ResourceMethod *_src, std::vector<uint8_t> _data, time_t _time) {
+    RequestQueueItem(ResourceMethod *_src, std::vector<uint8_t> _data, struct timeval _time) {
         this->src  = _src;
         this->data = _data;
         this->time = _time;
     }
     
-    RequestQueueItem(ResourceMethod *_src, std::string _str, time_t _time) {
+    RequestQueueItem(ResourceMethod *_src, std::string _str, struct timeval _time) {
         this->src  = _src;
         this->data = std::vector<uint8_t>(_str.begin(), _str.end());
         this->time = _time;

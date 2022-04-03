@@ -37,7 +37,8 @@ std::string ResourceMethod::methStringify(ResourceMethodType type) {
 void ResourceMethod::methodHandler(const coap_pdu_t *request, coap_pdu_t *response, std::vector<uint8_t> &data) {
     (void)request; /* Not currently used */
 
-    time_t time = std::time(nullptr);
+    struct timeval tv;
+    gettimeofday(&tv, nullptr);
 
     switch(this->config.type) {
         case ResourceMethodType::GET: {
@@ -45,7 +46,7 @@ void ResourceMethod::methodHandler(const coap_pdu_t *request, coap_pdu_t *respon
             std::string path = this->parentResource.getPath();
             uint8_t buf[256];
 
-            if(this->queue.enqueue(RequestQueueItem(this, this->parentResource.getValue(), time))) {
+            if(this->queue.enqueue(RequestQueueItem(this, this->parentResource.getValue(), tv))) {
                 coap_pdu_set_code(response, COAP_RESPONSE_CODE_INTERNAL_ERROR);
                 return;
             }
@@ -64,7 +65,7 @@ void ResourceMethod::methodHandler(const coap_pdu_t *request, coap_pdu_t *respon
         } break;
         case ResourceMethodType::PUT:
         case ResourceMethodType::POST: {
-            if(this->queue.enqueue(RequestQueueItem(this, data, time))) {
+            if(this->queue.enqueue(RequestQueueItem(this, data, tv))) {
                 coap_pdu_set_code(response, COAP_RESPONSE_CODE_INTERNAL_ERROR);
                 return;
             }
@@ -128,9 +129,12 @@ int ResourceMethod::executeCmd(std::stringstream &data, std::string cmd) {
 
 int ResourceMethod::handleRequestQueueItem(RequestQueueItem &item) {
     /* TODO: Allow selecting time format */
-    char       timebuf[32];
-    struct tm *tm   = localtime(&item.time);
-    strftime(timebuf, 32, "%Y-%m-%dT%H:%M:%S", tm);
+    /* Size based on YYYY-MM-DDTHH:MM:SS.mmm plus NULL termination. */
+    #define TIMEBUF_SZ 24
+    char       timebuf[TIMEBUF_SZ];
+    struct tm *tm   = localtime(&item.time.tv_sec);
+    size_t     end  = strftime(timebuf, TIMEBUF_SZ, "%Y-%m-%dT%H:%M:%S", tm);
+    snprintf(&timebuf[end], TIMEBUF_SZ - end, ".%03ld", item.time.tv_usec / 1000);
     
     std::list<std::stringstream> sss;
     
