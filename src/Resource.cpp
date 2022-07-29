@@ -30,7 +30,7 @@ queue(_queue) {
 
                 this->logFile.open(logDir, std::fstream::out | std::fstream::app);
                 if(this->logFile.fail()) {
-                    throw std::runtime_error("Failed to open log file " + logDir + " for resource " + this->config->resourcePath);
+                    throw std::runtime_error("Failed to open log file `" + logDir + "` for resource " + this->config->resourcePath);
                 }
             } else {
                 throw std::runtime_error("Resource method requests logging, but resource " + this->config->resourcePath + " has no defined log file");

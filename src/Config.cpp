@@ -90,9 +90,10 @@ static int _getString(const nlohmann::json &_json, const std::string &_name, std
 }
 
 EndpointConfig::EndpointConfig(const nlohmann::json &_json) {
-    _getString(_json, "address",  this->address);
-    _getString(_json, "port",     this->port);
-    _getString(_json, "logDir",   this->logDir);
+    _getString(_json, "address",       this->address);
+    _getString(_json, "port",          this->port);
+    _getString(_json, "logDir",        this->logDir);
+    _getString(_json, "globalLogFile", this->globalLogFile);
 
     std::string _proto;
     if(_getString(_json, "protocol", _proto)) {

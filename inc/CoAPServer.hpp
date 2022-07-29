@@ -25,6 +25,16 @@ class CoAPServer {
 
         std::list<ResourceConfig> dynamicResources;
 
+        /** Global log file for non-resource-specific messages. Only to be used by the main thread */
+        std::fstream globalLogFile;
+        /**
+         * @brief libcoap debug message hook
+         *
+         * @param level Severity
+         * @param message Message
+         */
+        static void logHandler(coap_log_t level, const char *message);
+
         static int resolveAddress(std::string host, std::string service, coap_address_t &addr);
 
         template<ResourceMethodType T>

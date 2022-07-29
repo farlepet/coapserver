@@ -5,11 +5,12 @@
         "endpoint": {
             "type": "object",
             "properties": {
-                "address":  { "type": "string" },
-                "port":     { "type": "string" },
-                "logDir":   { "type": "string" },
-                "protocol": { "type": "string", "pattern": "^(udp|dtls|tcp|tls)$" },
-                "security": {
+                "address":       { "type": "string" },
+                "port":          { "type": "string" },
+                "logDir":        { "type": "string" },
+                "globalLogFile": { "type": "string" },
+                "protocol":      { "type": "string", "pattern": "^(udp|dtls|tcp|tls)$" },
+                "security":      {
                     "type": "object",
                     "properties": {
                         "key":  { "type": "string" },

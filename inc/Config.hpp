@@ -107,6 +107,8 @@ struct EndpointConfig {
     std::string port    = "5683";
     /** Directory in which to store log files */
     std::string logDir  = "";
+    /** Global log file for general messages */
+    std::string globalLogFile = "coap_server.log";
     /** Which protocol to use. */
     EndpointTransport transport = EndpointTransport::UDP;
 

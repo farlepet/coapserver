@@ -1,3 +1,4 @@
+#include <filesystem>
 #include <iostream>
 #include <regex>
 #include <sys/stat.h>
@@ -7,9 +8,24 @@
 
 #include "CoAPServer.hpp"
 
+/** Global log file, used by CoAPServer::logHandler() */
+static std::fstream *_globalCoAPLog = nullptr;
+
 CoAPServer::CoAPServer(Config &_config, RequestQueue &_queue) :
 queue(_queue) {
     this->endpoint = _config.getEndpoint();
+
+    std::string logFile;
+    if(this->endpoint.logDir.size()) {
+        logFile = this->endpoint.logDir + std::filesystem::path::preferred_separator + this->endpoint.globalLogFile;
+    } else {
+        logFile = this->endpoint.globalLogFile;
+    }
+
+    this->globalLogFile.open(logFile, std::fstream::out | std::fstream::app);
+    if(this->globalLogFile.fail()) {
+        throw std::runtime_error("Failed to open global log file `" + logFile + "`");
+    }
 
     if((this->endpoint.transport == EndpointTransport::DTLS) &&
        !coap_dtls_is_supported()) {
@@ -104,6 +120,11 @@ int CoAPServer::init() {
                                                   COAP_OPTION_MAXAGE,
                                                   COAP_OPTION_IF_NONE_MATCH };
         coap_cache_ignore_options(this->ctx, cache_ignore_options, sizeof(cache_ignore_options) / sizeof(cache_ignore_options[0]));
+    }
+
+    if(!ret) {
+        _globalCoAPLog = &this->globalLogFile;
+        coap_set_log_handler(&CoAPServer::logHandler);
     }
 
     return ret;
@@ -323,4 +344,27 @@ coap_dtls_key_t *CoAPServer::dtlsValidateSNICallback(const char *sni, void *arg)
     (void)sni;
     /* We only support a single key set at this time */
     return static_cast<coap_dtls_key_t *>(arg);
+}
+
+
+#define COAP_LOG_MSG_COLOR   "\033[31m"
+#define COAP_LOG_MSG_NOCOLOR "\033[0m"
+void CoAPServer::logHandler(coap_log_t level, const char *message) {
+    if(_globalCoAPLog == nullptr) {
+        throw std::runtime_error("CoAPServer::logHandler called, but _globalCoAPLog is NULL!");
+    }
+
+    struct timeval tv;
+    gettimeofday(&tv, nullptr);
+
+    /* Size based on YYYY-MM-DDTHH:MM:SS.mmm plus NULL termination. */
+    #define TIMEBUF_SZ 24
+    char       timebuf[TIMEBUF_SZ];
+    struct tm *tm   = localtime(&tv.tv_sec);
+    size_t     end  = strftime(timebuf, TIMEBUF_SZ, "%Y-%m-%dT%H:%M:%S", tm);
+    snprintf(&timebuf[end], TIMEBUF_SZ - end, ".%03ld", tv.tv_usec / 1000);
+
+    /* @note libcoap messages already contain a newline. */
+    *_globalCoAPLog << timebuf << " | libcoap[" << level << "]: " << message;
+    std::cerr       << timebuf << " | " COAP_LOG_MSG_COLOR "libcoap[" << level << "]" COAP_LOG_MSG_NOCOLOR ": " << message;
 }
