@@ -51,12 +51,12 @@ void ResourceMethod::methodHandler(const coap_pdu_t *request, coap_pdu_t *respon
                 return;
             }
 
+            strncpy(reinterpret_cast<char *>(buf), path.c_str(), 255);
+            coap_add_option(response, COAP_OPTION_URI_PATH, strlen(reinterpret_cast<char *>(buf)), buf);
             coap_add_option(response, COAP_OPTION_CONTENT_FORMAT,
                             coap_encode_var_safe(buf, 16, COAP_MEDIATYPE_TEXT_PLAIN), buf);
             coap_add_option(response, COAP_OPTION_MAXAGE,
                             coap_encode_var_safe(buf, 16, this->parentResource.getMaxAge()), buf);
-            strncpy(reinterpret_cast<char *>(buf), path.c_str(), 255);
-            coap_add_option(response, COAP_OPTION_URI_PATH, strlen(reinterpret_cast<char *>(buf)), buf);
 
             coap_add_data(response, val.size(), reinterpret_cast<const uint8_t *>(val.c_str()));
 
