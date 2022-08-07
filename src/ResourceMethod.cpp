@@ -61,7 +61,6 @@ void ResourceMethod::methodHandler(const coap_pdu_t *request, coap_pdu_t *respon
             coap_add_data(response, val.size(), reinterpret_cast<const uint8_t *>(val.c_str()));
 
             coap_pdu_set_code(response, COAP_RESPONSE_CODE_CONTENT);
-            coap_pdu_set_type(response, COAP_MESSAGE_NON);
         } break;
         case ResourceMethodType::PUT:
         case ResourceMethodType::POST: {

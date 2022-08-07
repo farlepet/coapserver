@@ -58,7 +58,7 @@ int Resource::attach(coap_context_t *ctx) {
     std::cerr << "Attaching resource " << this->config->resourcePath << std::endl;
 
     res_str = coap_make_str_const(this->config->resourcePath.c_str());
-    this->res = coap_resource_init(res_str, 0);
+    this->res = coap_resource_init(res_str, COAP_RESOURCE_FLAGS_NOTIFY_CON);
     if(this->config->observable) {
         coap_resource_set_get_observable(this->res, 1);
     }
