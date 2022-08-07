@@ -7,7 +7,8 @@ RUN set -ex; \
     git clone https://github.com/obgm/libcoap.git -b v4.3.0 /opt/libcoap; \
     mkdir -p /opt/libcoap/build; \
     cd /opt/libcoap/build; \
-    cmake .. -DBUILD_SHARED_LIBS=ON; \
+    cmake .. -DBUILD_SHARED_LIBS=ON -DENABLE_CLIENT_CODE=OFF \
+             -DENABLE_EXAMPLES=OFF -DENABLE_DOCS=OFF; \
     cmake --build . --parallel $(nproc) -- install;
 
 # Build coapserver
