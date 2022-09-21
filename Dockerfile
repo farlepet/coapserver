@@ -1,5 +1,5 @@
 # syntax=docker/dockerfile:1
-FROM alpine:3.15 AS build
+FROM --platform=$TARGETPLATFORM alpine:3.15 AS build
 RUN apk add --no-cache g++ make cmake gnutls-dev boost-dev nlohmann-json git
 
 # Build libcoap
@@ -20,7 +20,7 @@ RUN set -ex; \
     cmake ..; \
     cmake --build . --parallel $(nproc)
 
-FROM alpine:3.15 AS runtime
+FROM --platform=$TARGETPLATFORM alpine:3.15 AS runtime
 
 COPY --from=build /opt/coapserver/build/coap_server /usr/local/bin/
 COPY --from=build /usr/local/lib/libcoap-3.so /usr/local/lib/

@@ -36,17 +36,24 @@ __Planned Features__:
 Running via Docker
 ------------------
 
+`coapserver` images are build to support amd64, arm64, armv6, armv6, and i386
+targets. `coapserver-extra` is currently only built to support amd64, due to
+`-Wnarrowing` errors thrown by the `msgpack-tooks` build on other platforms.
+
+NOTE: Depending on the host system (for instance, podman on CentOS), it may be
+required to append a `,Z` to the end of both bind mounts to work with SELinux.
+
     docker run -it --rm -p 5683:5683/udp \
-               --mount type=bind,source=$PWD/config.json,target=/config.json,Z \
-               --mount type=bind,source=$PWD/logs/,target=/var/log/coapserver,Z \
+               --mount type=bind,source=$PWD/config.json,target=/config.json \
+               --mount type=bind,source=$PWD/logs/,target=/var/log/coapserver \
                farlepet/coapserver:<version> \
                -c /config.json -l /var/log/coapserver
 
 _OR_
 
     docker run -it --rm -p 5683:5683/udp \
-               --mount type=bind,source=$PWD/config.json,target=/config.json,Z \
-               --mount type=bind,source=$PWD/logs/,target=/var/log/coapserver,Z \
+               --mount type=bind,source=$PWD/config.json,target=/config.json \
+               --mount type=bind,source=$PWD/logs/,target=/var/log/coapserver \
                farlepet/coapserver-extra:<version> \
                -c /config.json -l /var/log/coapserver
 
@@ -80,11 +87,14 @@ The following CMake options may be useful:
 Manually building Docker image(s)
 ------
 
+NOTE: Dockerfiles now expect to be run using `docker buildx build`, and will not
+work with standard `docker build` (unless having previously run `docker buildx install`).
+
     # Build base coapserver image
-    docker build -t coapserver .
+    docker buildx build -t coapserver .
     # Build extra coapserver image - optional (base image must be built first)
     # Adds extra tools including cbor2json, msgpack2json, lz4, gzip, and xz
-    docker build -f Dockerfile.extra -t coapserver-extra .
+    docker buildx build -f Dockerfile.extra -t coapserver-extra .
 
 Data Flow
 ---------
@@ -94,3 +104,4 @@ PUT/POST:
 
 GET:
  - Current Resource Value -> Requestor
+

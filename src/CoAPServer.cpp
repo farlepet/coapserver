@@ -362,7 +362,7 @@ void CoAPServer::logHandler(coap_log_t level, const char *message) {
     char       timebuf[TIMEBUF_SZ];
     struct tm *tm   = localtime(&tv.tv_sec);
     size_t     end  = strftime(timebuf, TIMEBUF_SZ, "%Y-%m-%dT%H:%M:%S", tm);
-    snprintf(&timebuf[end], TIMEBUF_SZ - end, ".%03ld", tv.tv_usec / 1000);
+    snprintf(&timebuf[end], TIMEBUF_SZ - end, ".%03u", static_cast<unsigned int>(tv.tv_usec / 1000));
 
     /* @note libcoap messages already contain a newline. */
     *_globalCoAPLog << timebuf << " | libcoap[" << level << "]: " << message;

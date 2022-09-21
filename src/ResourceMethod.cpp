@@ -133,7 +133,7 @@ int ResourceMethod::handleRequestQueueItem(RequestQueueItem &item) {
     char       timebuf[TIMEBUF_SZ];
     struct tm *tm   = localtime(&item.time.tv_sec);
     size_t     end  = strftime(timebuf, TIMEBUF_SZ, "%Y-%m-%dT%H:%M:%S", tm);
-    snprintf(&timebuf[end], TIMEBUF_SZ - end, ".%03ld", item.time.tv_usec / 1000);
+    snprintf(&timebuf[end], TIMEBUF_SZ - end, ".%03u", static_cast<unsigned int>(item.time.tv_usec / 1000));
     
     std::list<std::stringstream> sss;
     
