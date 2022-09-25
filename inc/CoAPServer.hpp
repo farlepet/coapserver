@@ -67,6 +67,12 @@ class CoAPServer {
          */
         int exec(uint32_t timeout_ms);
 
+        /**
+         * @brief Loops through each resource and calls valueUpdate() on it, to
+         * perform file update checks.
+         */
+        void valueUpdate(void);
+
         void handleDynamicRequest(const coap_pdu_t *request, coap_pdu_t *response, coap_session_t *session, ResourceMethodType method);
 };
 

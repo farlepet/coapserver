@@ -26,6 +26,8 @@ __Current Features__:
    - By piping request data via stdin, or passing in via environment variable
  - Templated resource configuration for creating multiple similar resources
  - Regex-based on-the-fly resource creation
+ - Backing resource data by data files
+   - Including notifying observers when file changes
  - Multi-block requests
     - Currently no support for multi-block responses
 

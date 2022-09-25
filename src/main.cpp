@@ -18,6 +18,7 @@ typedef struct {
 
 static int _handleCmdLine(int, char **, options_t &);
 static int _requestQueueThread(RequestQueue &);
+static int _valueUpdateThread(CoAPServer &);
 
 static std::atomic<bool> _exit_now = false;
 
@@ -70,12 +71,14 @@ int main(int argc, char **argv) {
     }
 
     std::thread rQueueThread(_requestQueueThread, std::ref(rQueue));
+    std::thread valueUpdateThread(_valueUpdateThread, std::ref(coap));
 
     while(_exit_now == false) {
         coap.exec(200);
     }
 
     rQueueThread.join();
+    valueUpdateThread.join();
 
     return 0;
 }
@@ -87,6 +90,16 @@ static int _requestQueueThread(RequestQueue &queue) {
             item.src->handleRequestQueueItem(item);
         }
         std::this_thread::sleep_for(std::chrono::milliseconds(10));
+    }
+
+    return 0;
+}
+
+static int _valueUpdateThread(CoAPServer &coap) {
+    while(_exit_now == false) {
+        coap.valueUpdate();
+        /* @todo Make file update rate configurable. */
+        std::this_thread::sleep_for(std::chrono::milliseconds(3000));
     }
 
     return 0;

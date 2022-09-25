@@ -368,3 +368,10 @@ void CoAPServer::logHandler(coap_log_t level, const char *message) {
     *_globalCoAPLog << timebuf << " | libcoap[" << level << "]: " << message;
     std::cerr       << timebuf << " | " COAP_LOG_MSG_COLOR "libcoap[" << level << "]" COAP_LOG_MSG_NOCOLOR ": " << message;
 }
+
+void CoAPServer::valueUpdate(void) {
+    for(auto it = this->resources.begin(); it != this->resources.end(); it++) {
+        (*it)->valueUpdate();
+    }
+}
+

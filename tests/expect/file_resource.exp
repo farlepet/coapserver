@@ -9,48 +9,66 @@ expect eof
 # Spawn server
 spawn build/coap_server -c tests/configs/file_resource.json
 set server_id $spawn_id
-expect {
-    "Attaching resource" {}
-    timeout { puts "timeout"; exit 2 }
-    eof     { puts "eof";     exit 1 }
-}
+expect "Attaching resource" {} \
+       timeout { puts "timeout"; exit 2 } \
+       eof     { puts "eof";     exit 1 }
+
 sleep 0.3
 
 # Get file contents via CoAP
+send_user -- "\n---- GET file contents ----\n"
+
 spawn coap-client -m get coap://127.0.0.1/file
-expect {
-    "init value" {}
-    timeout { puts "timeout"; exit 2 }
-    eof     { puts "eof";     exit 1 }
-}
+expect "init value" {} \
+       timeout { puts "timeout"; exit 2 } \
+       eof     { puts "eof";     exit 1 }
 
 # Write file via CoAP
-spawn coap-client -m put coap://127.0.0.1/file -e "remote set"
-expect -i $server_id {
-    "file:PUT: remote set" {}
-    timeout { puts "timeout"; exit 2 }
-    eof     { puts "eof";     exit 1 }
-}
+send_user -- "\n---- PUT file contents ----\n"
 
-# There is an unexpected delay here of the timeout period, unsure why
+spawn coap-client -m put coap://127.0.0.1/file -e "remote set"
+expect -i $server_id  "file:PUT: remote set" {} \
+                      timeout { puts "timeout"; exit 2 } \
+                      eof     { puts "eof";     exit 1 }
 
 spawn cat data.bin
-expect {
-    "remote set" {}
-    timeout { puts "timeout"; exit 2 }
-    eof     { puts "eof";     exit 1 }
-}
+expect "remote set" {} \
+       timeout { puts "timeout"; exit 2 } \
+       eof     { puts "eof";     exit 1 }
+
 
 # Modify file locally
+send_user -- "\n---- Change file contents locally ----\n"
+
 spawn sh -c "echo -n \"local set\" > data.bin"
 expect eof
 
-spawn coap-client -m get coap://127.0.0.1/file
-expect {
-    "local set" {}
-    timeout { puts "timeout"; exit 2 }
-    eof     { puts "eof";     exit 1 }
-}
+# Ensure server has time to notice file change
+sleep 5
 
+spawn coap-client -m get coap://127.0.0.1/file
+expect "local set" {} \
+       timeout { puts "timeout"; exit 2 } \
+       eof     { puts "eof";     exit 1 }
+
+
+# Local file update with observer
+send_user -- "\n---- Change file contents locally w/ observe ----\n"
+
+spawn coap-client -m get coap://127.0.0.1/file -s 20
+set observer_id $spawn_id
+
+expect "local set" {} \
+       timeout { exit 2 } \
+       eof     { exit 1 }
+
+spawn sh -c "echo -n \"observe set\" > data.bin"
+expect eof
+
+expect -i $observer_id "observe set" {} \
+                        timeout { exit 2 } \
+                        eof     { exit 1 }
+
+close -i $observer_id
 close -i $server_id
 

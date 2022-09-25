@@ -99,7 +99,7 @@ int Resource::attach(coap_context_t *ctx) {
        std::filesystem::exists(this->dataFilePath)) {
         /* Set last update time to an hour ago to force a read. */
         this->dataFileWriteTime = std::filesystem::last_write_time(this->dataFilePath) - std::chrono::hours(1);
-        this->getValue();
+        this->valueUpdate();
     } else {
         this->setValue(this->config->initialValue);
     }
@@ -145,47 +145,71 @@ void Resource::setValue(const std::string &_value) {
 }
 
 void Resource::setValue(const std::vector<std::byte> &_value) {
-    /* @todo Should this be surrounded by a lock? Wouldn't want to be updating the value
-     * while another thread is reading it. */
+    this->valueLock.lock();
     this->value = _value;
+    this->valueLock.unlock();
+
     if(this->config->observable) {
         coap_resource_notify_observers(this->res, nullptr);
     }
 
     if(!this->dataFilePath.empty()) {
+        this->dataFileLock.lock();
         std::ofstream file(this->dataFilePath, std::ios::out | std::ios::binary | std::ios::trunc);
-        file.write(reinterpret_cast<const char *>(this->value.data()), this->value.size());
+        file.write(reinterpret_cast<const char *>(_value.data()), this->value.size());
+        file.close();
+
         this->dataFileWriteTime = std::filesystem::last_write_time(this->dataFilePath);
+
+        this->dataFileLock.unlock();
     }
 }
 
 std::vector<std::byte> Resource::getValue() {
-    /* @todo Not sure how effecient this is, might be better to just occasionally
-     * check if the file has changed in a different thread. This would also allow
-     * for asynchronous notifications of a changed file. */
-    if(!this->dataFilePath.empty() &&
-       std::filesystem::exists(this->dataFilePath)) {
-        std::filesystem::file_time_type mtime = std::filesystem::last_write_time(this->dataFilePath);
-        if(mtime > this->dataFileWriteTime) {
-            /* File has been modified, read it. */
-            uintmax_t fileSize = std::filesystem::file_size(this->dataFilePath);
-            std::vector<std::byte> data(fileSize);
+    this->valueLock.lock();
+    std::vector<std::byte> val = this->value;
+    this->valueLock.unlock();
+    return val;
+}
 
-            std::ifstream file(this->dataFilePath, std::ios::in | std::ios::binary);
-            file.read(reinterpret_cast<char *>(data.data()), fileSize);
-
-            /* @note This may cause interesting behaviour if the resource
-             * currently requesting the value is also an observer. */
-            this->value = data;
-            if(this->config->observable) {
-                coap_resource_notify_observers(this->res, nullptr);
-            }
-
-            this->dataFileWriteTime = mtime;
-        }
+void Resource::valueUpdate() {
+    if(this->dataFilePath.empty() ||
+       !std::filesystem::exists(this->dataFilePath)) {
+        /* No file to read */
+        return;
     }
 
-    return this->value;
+    std::filesystem::file_time_type mtime = std::filesystem::last_write_time(this->dataFilePath);
+    if(mtime <= this->dataFileWriteTime) {
+        /* File has not been updated since it was last read. */
+        return;
+    }
+
+    /* File has been modified, read it. */
+    this->dataFileLock.lock();
+
+    uintmax_t fileSize = std::filesystem::file_size(this->dataFilePath);
+    std::vector<std::byte> data(fileSize);
+
+    std::ifstream file(this->dataFilePath, std::ios::in | std::ios::binary);
+    file.read(reinterpret_cast<char *>(data.data()), fileSize);
+    file.close();
+
+    /* Not using setValue, since that will attempt to write to the dataFile (it
+     * may make sense to move that logic here as well). */
+    this->valueLock.lock();
+    this->value = data;
+    this->valueLock.unlock();
+
+    if(this->config->observable) {
+        coap_resource_notify_observers(this->res, nullptr);
+    }
+
+    this->dataFileWriteTime = mtime;
+
+    /* Waiting to do the unlock here, so an asynchronous call to setValue does
+     * not mess anything up. */
+    this->dataFileLock.unlock();
 }
 
 std::string Resource::getPath() {

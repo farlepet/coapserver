@@ -1,0 +1,21 @@
+#!/usr/bin/expect
+
+set timeout 5
+
+# Spawn server
+spawn build/coap_server -c tests/configs/file_resource.json
+expect "Attaching resource" {} \
+       timeout { puts "timeout"; exit 2 } \
+       eof     { puts "eof";     exit 1 }
+
+sleep 0.3
+
+send \x03
+# NOTE: Exit could take up to ~3 seconds, due to the rate at which the file
+# update thread wakes up.
+expect "Exiting..." {} \
+       timeout { puts "timeout"; exit 2 } \
+       eof     { puts "eof";     exit 1 }
+
+expect eof
+
