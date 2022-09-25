@@ -1,0 +1,25 @@
+#!/usr/bin/expect
+
+set timeout 5
+
+# Create data file
+spawn sh -c "echo -n \"init value\" > data.bin"
+expect eof
+
+# Spawn server
+spawn build/coap_server -c tests/configs/protocols/protocol_dtls.json
+set server_id $spawn_id
+expect "Attaching resource" {} \
+       timeout { puts "timeout"; exit 2 } \
+       eof     { puts "eof";     exit 1 }
+
+sleep 0.1
+
+spawn coap-client -j coap-client.key -c coap-client.cert.pem -m get coaps://127.0.0.1/test
+expect "12345" {} \
+       timeout { puts "timeout"; exit 2 } \
+       eof     { puts "eof";     exit 1 }
+expect eof
+
+close -i $server_id
+

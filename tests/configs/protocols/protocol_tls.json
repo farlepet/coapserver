@@ -1,0 +1,25 @@
+{
+    "endpoint": {
+        "address":  "0.0.0.0",
+        "port":     "5684",
+        "protocol": "tls",
+        "security": {
+            "key":  "coapserver.key",
+            "cert": "coapserver.cert.pem",
+            "ca":   "coapserver-ca.cert.pem"
+        }
+    },
+    "resources": [
+        {
+            "name": "Test resource",
+            "path": "test",
+            "value": "12345",
+            "methods": {
+                "GET": {
+                    "format": "STRING",
+                    "print": true
+                }
+            }
+        }
+    ]
+}
