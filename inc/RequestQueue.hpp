@@ -13,25 +13,25 @@ class RequestQueue;
 
 struct RequestQueueItem {
     /** Resource method that handled the request */
-    ResourceMethod      *src;
+    ResourceMethod        *src;
     /** Value of request */
-    std::vector<uint8_t> data;
+    std::vector<std::byte> data;
     /** Time of request */
-    struct timeval       time;
+    struct timeval         time;
 
     RequestQueueItem() {}
     
-    RequestQueueItem(ResourceMethod *_src, std::vector<uint8_t> _data, struct timeval _time) {
+    RequestQueueItem(ResourceMethod *_src, std::vector<std::byte> _data, struct timeval _time) {
         this->src  = _src;
         this->data = _data;
         this->time = _time;
     }
     
-    RequestQueueItem(ResourceMethod *_src, std::string _str, struct timeval _time) {
+    /*RequestQueueItem(ResourceMethod *_src, std::string _str, struct timeval _time) {
         this->src  = _src;
         this->data = std::vector<uint8_t>(_str.begin(), _str.end());
         this->time = _time;
-    }
+    }*/
 };
 
 /**

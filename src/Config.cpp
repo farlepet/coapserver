@@ -122,9 +122,10 @@ ResourceConfig::ResourceConfig(nlohmann::json &_json) {
     if(!_getString(_json, "path", this->resourcePath)) {
         throw std::runtime_error("ERROR: Resource does not include resource path!");
     }
-    _getString(_json, "name",    this->resourceName);
-    _getString(_json, "value",   this->initialValue);
-    _getString(_json, "logfile", this->logFile);
+    _getString(_json, "name",     this->resourceName);
+    _getString(_json, "value",    this->initialValue);
+    _getString(_json, "logfile",  this->logFile);
+    _getString(_json, "datafile", this->dataFile);
 
     if(_json.contains("observable") && _json["observable"].is_boolean()) {
         this->observable = _json["observable"];

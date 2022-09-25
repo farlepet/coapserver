@@ -35,7 +35,7 @@ class ResourceMethod {
 
         ~ResourceMethod(void);
 
-        void methodHandler(const coap_pdu_t *request, coap_pdu_t *response, std::vector<std::uint8_t> &data);
+        void methodHandler(const coap_pdu_t *request, coap_pdu_t *response, std::vector<std::byte> &data);
 
         ResourceMethodType getMethodType();
 

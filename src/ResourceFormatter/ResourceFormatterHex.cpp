@@ -7,7 +7,7 @@ ResourceFormatterHex::ResourceFormatterHex() {
 
 }
 
-int ResourceFormatterHex::decode(const std::vector<uint8_t> &data, std::ostream &out) {
+int ResourceFormatterHex::decode(const std::vector<std::byte> &data, std::ostream &out) {
     out << std::uppercase << std::hex << std::setfill('0');
     
     for(size_t i = 0; i < data.size(); i++) {

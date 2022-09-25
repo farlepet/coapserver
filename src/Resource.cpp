@@ -1,5 +1,6 @@
 #include <iostream>
 #include <filesystem>
+#include <algorithm>
 
 #include "Resource.hpp"
 
@@ -90,13 +91,13 @@ int Resource::attach(coap_context_t *ctx) {
     }
     coap_add_resource(ctx, this->res);
 
-    this->value = this->config->initialValue;
+    this->setValue(this->config->initialValue);
 
     return 0;
 }
 
 void Resource::handleCoAPRequest(const coap_pdu_t *request, coap_pdu_t *response, coap_session_t *session, ResourceMethodType method) {
-    std::vector<uint8_t> data;
+    std::vector<std::byte> data;
 
     if(method == ResourceMethodType::PUT ||
        method == ResourceMethodType::POST) {
@@ -121,14 +122,27 @@ void Resource::handleCoAPRequest(const coap_pdu_t *request, coap_pdu_t *response
     }
 }
 
-void Resource::setValue(std::string _value) {
+void Resource::setValue(const std::string &_value) {
+    std::vector<std::byte> vec;
+    vec.reserve(_value.size());
+
+    std::transform(_value.begin(), _value.end(), std::back_inserter(vec), [](char c) {
+        return std::byte(c);
+    });
+
+    this->setValue(vec);
+}
+
+void Resource::setValue(const std::vector<std::byte> &_value) {
+    /* @todo Should this be surrounded by a lock? Wouldn't want to be updating the value
+     * while another thread is reading it. */
+    this->value = _value;
     if(this->config->observable) {
         coap_resource_notify_observers(this->res, nullptr);
     }
-    this->value = _value;
 }
 
-std::string Resource::getValue() {
+std::vector<std::byte> Resource::getValue() {
     return this->value;
 }
 
@@ -145,7 +159,7 @@ _cache_free_app_data(void *data) {
     delete static_cast<std::vector<uint8_t> *>(data);
 }
 
-int Resource::sessionGetData(const coap_pdu_t *request, coap_pdu_t *response, coap_session_t *session, std::vector<uint8_t> &dataOut) {
+int Resource::sessionGetData(const coap_pdu_t *request, coap_pdu_t *response, coap_session_t *session, std::vector<std::byte> &dataOut) {
     (void)response;
     
     size_t         size;
@@ -153,7 +167,7 @@ int Resource::sessionGetData(const coap_pdu_t *request, coap_pdu_t *response, co
     size_t         total;
     const uint8_t *data;
 
-    std::vector<uint8_t> *data_so_far;
+    std::vector<std::byte> *data_so_far;
 
     /* Handle block-wise transfers
      *   Heavily based off of https://github.com/obgm/libcoap/blob/develop/examples/coap-server.c */
@@ -171,7 +185,7 @@ int Resource::sessionGetData(const coap_pdu_t *request, coap_pdu_t *response, co
                     std::cerr << "Could not create CoAP cache entry for '" << this->getPath() << "'!" << std::endl;
                     return -1;
                 }
-                data_so_far = new std::vector<uint8_t>;
+                data_so_far = new std::vector<std::byte>;
                 if(data_so_far == nullptr) {
                     std::cerr << "Could not create blockwise data buffer for '" << this->getPath() << "'!" << std::endl;
                     return -1;
@@ -179,11 +193,11 @@ int Resource::sessionGetData(const coap_pdu_t *request, coap_pdu_t *response, co
                 coap_cache_set_app_data(cache_entry, data_so_far, _cache_free_app_data);
             }
         } else if(offset == 0) {
-            data_so_far = static_cast<std::vector<uint8_t> *>(coap_cache_get_app_data(cache_entry));
+            data_so_far = static_cast<std::vector<std::byte> *>(coap_cache_get_app_data(cache_entry));
             if(data_so_far) {
                 data_so_far->clear();
             } else {
-                data_so_far = new std::vector<uint8_t>;
+                data_so_far = new std::vector<std::byte>;
                 if(data_so_far == nullptr) {
                     std::cerr << "Could not create blockwise data buffer for '" << this->getPath() << "'!" << std::endl;
                     return -1;
@@ -193,7 +207,7 @@ int Resource::sessionGetData(const coap_pdu_t *request, coap_pdu_t *response, co
         }
 
         if(size) {
-            data_so_far = static_cast<std::vector<uint8_t> *>(coap_cache_get_app_data(cache_entry));
+            data_so_far = static_cast<std::vector<std::byte> *>(coap_cache_get_app_data(cache_entry));
             if(data_so_far == nullptr) {
                 /* TODO: Find the cause of this occasional error */
                 std::cerr << "data_so_far NULL on block for '" << this->getPath() << "'!" << std::endl;
@@ -201,12 +215,13 @@ int Resource::sessionGetData(const coap_pdu_t *request, coap_pdu_t *response, co
             }
             /* Insert the received data at the correct location within the buffer */
             data_so_far->resize(total);
-            std::copy(data, data + size, data_so_far->begin() + static_cast<long>(offset));
+            std::copy(reinterpret_cast<const std::byte *>(data), reinterpret_cast<const std::byte *>(data + size),
+                      data_so_far->begin() + static_cast<long>(offset));
         }
 
         if((offset + size) == total) {
             /* We've gathered all blocks */
-            data_so_far = static_cast<std::vector<uint8_t> *>(coap_cache_get_app_data(cache_entry));
+            data_so_far = static_cast<std::vector<std::byte> *>(coap_cache_get_app_data(cache_entry));
             coap_cache_set_app_data(cache_entry, nullptr, nullptr);
             dataOut.clear();
             
@@ -222,7 +237,7 @@ int Resource::sessionGetData(const coap_pdu_t *request, coap_pdu_t *response, co
     } else {
         /* Single-block transfer */
         dataOut.clear();
-        dataOut.insert(dataOut.end(), data, data + size);
+        dataOut.insert(dataOut.end(), reinterpret_cast<const std::byte *>(data), reinterpret_cast<const std::byte *>(data + size));
 
         return 1;
     }

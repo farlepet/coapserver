@@ -34,7 +34,7 @@ std::string ResourceMethod::methStringify(ResourceMethodType type) {
            (type == ResourceMethodType::iPATCH) ? "iPATCH" : "???";
 }
 
-void ResourceMethod::methodHandler(const coap_pdu_t *request, coap_pdu_t *response, std::vector<uint8_t> &data) {
+void ResourceMethod::methodHandler(const coap_pdu_t *request, coap_pdu_t *response, std::vector<std::byte> &data) {
     (void)request; /* Not currently used */
 
     struct timeval tv;
@@ -42,8 +42,8 @@ void ResourceMethod::methodHandler(const coap_pdu_t *request, coap_pdu_t *respon
 
     switch(this->config.type) {
         case ResourceMethodType::GET: {
-            std::string val  = this->parentResource.getValue();
-            std::string path = this->parentResource.getPath();
+            std::vector<std::byte> val = this->parentResource.getValue();
+            std::string path           = this->parentResource.getPath();
             uint8_t buf[256];
 
             if(this->queue.enqueue(RequestQueueItem(this, this->parentResource.getValue(), tv))) {
@@ -58,7 +58,7 @@ void ResourceMethod::methodHandler(const coap_pdu_t *request, coap_pdu_t *respon
             coap_add_option(response, COAP_OPTION_MAXAGE,
                             coap_encode_var_safe(buf, 16, this->parentResource.getMaxAge()), buf);
 
-            coap_add_data(response, val.size(), reinterpret_cast<const uint8_t *>(val.c_str()));
+            coap_add_data(response, val.size(), reinterpret_cast<const uint8_t *>(&val[0]));
 
             coap_pdu_set_code(response, COAP_RESPONSE_CODE_CONTENT);
         } break;
@@ -139,12 +139,10 @@ int ResourceMethod::handleRequestQueueItem(RequestQueueItem &item) {
     
     switch(this->config.type) {
         case ResourceMethodType::GET: {
-            std::string str(item.data.begin(), item.data.end());
+            /* @todo Need to format GET data to be printable, if needed. */
+            /*std::string str(item.data.begin(), item.data.end());
             sss.push_back(std::stringstream());
-            sss.back() << str;
-        } break;
-        case ResourceMethodType::PUT:
-        case ResourceMethodType::POST: {
+            sss.back() << str;*/
             std::list<ResourceFormatter *>::iterator it = this->fmts.begin();
             for(; it != this->fmts.end(); it++) {
                 sss.push_back(std::stringstream());
@@ -163,6 +161,31 @@ int ResourceMethod::handleRequestQueueItem(RequestQueueItem &item) {
                    (it == this->fmts.begin())) {
                     this->parentResource.setValue(sss.back().str());
                 }
+            }
+        } break;
+        case ResourceMethodType::PUT:
+        case ResourceMethodType::POST: {
+            std::list<ResourceFormatter *>::iterator it = this->fmts.begin();
+            for(; it != this->fmts.end(); it++) {
+                sss.push_back(std::stringstream());
+                (*it)->decode(item.data, sss.back());
+
+                if(this->config.cmd.size()) {
+                    if(this->config.cmdLogInput) {
+                        /* We want to log the input, so just duplicate the stringstream */
+                        std::string dup = sss.back().str();
+                        sss.push_back(std::stringstream(dup));
+                    }
+                    this->executeCmd(sss.back(), this->config.cmd);
+                }
+            }
+
+            if(this->config.store) {
+                /* @todo Support using output of command or decoder to set
+                 * resource value. This was moved out of the ResourceFormatter
+                 * loop in order to better support raw data, without needing to
+                 * add encoders to each ResourceFormatter. */
+                this->parentResource.setValue(item.data);
             }
         } break;
         case ResourceMethodType::DELETE:

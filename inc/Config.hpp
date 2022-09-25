@@ -51,6 +51,8 @@ struct ResourceConfig {
     std::string  logFile      = "";
     /** Initial value to the resource returned by GET requests */
     std::string  initialValue = "";
+    /** Path to file containing resource data, if applicable */
+    std::string  dataFile     = "";
     /** Max-age value */
     unsigned int maxAge       = 3600;
     /** Whether or not to allow observation of the resource */

@@ -12,15 +12,15 @@ static const char *_base64_chars = "ABCDEFGHIJKLMNOPQRSTUVWXYZ"
                                    "abcdefghijklmnopqrstuvwxyz"
                                    "0123456789+/";
 
-int ResourceFormatterBase64::decode(const std::vector<uint8_t> &data, std::ostream &out) {
+int ResourceFormatterBase64::decode(const std::vector<std::byte> &data, std::ostream &out) {
     /* 3 bytes / 4 characters at a time */
     for(size_t i = 0; i < data.size(); i += 3) {
         size_t left = data.size() - i;
 
         uint8_t buff[3];
-        buff[0] =               data[i];
-        buff[1] = (left >= 2) ? data[i+1] : 0x00;
-        buff[2] = (left >= 3) ? data[i+2] : 0x00;
+        buff[0] =               static_cast<uint8_t>(data[i]);
+        buff[1] = (left >= 2) ? static_cast<uint8_t>(data[i+1]) : 0x00;
+        buff[2] = (left >= 3) ? static_cast<uint8_t>(data[i+2]) : 0x00;
 
         out << _base64_chars[(buff[0] >> 2)];
         out << _base64_chars[((buff[0] << 4) & 0x30) |
