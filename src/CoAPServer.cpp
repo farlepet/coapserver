@@ -293,6 +293,7 @@ void CoAPServer::handleDynamicRequest(const coap_pdu_t *request, coap_pdu_t *res
             cfg->resourcePath   = uri;
             cfg->resourceName   = _regexReplace(cfg->resourceName, sm);
             cfg->logFile        = _regexReplace(cfg->logFile, sm);
+            cfg->dataFile       = _regexReplace(cfg->dataFile, sm);
 
             Resource *res = new Resource(cfg, this->queue, this->endpoint.logDir);
             if(res == nullptr) {

@@ -277,6 +277,7 @@ void TemplateConfig::GenerateResources(std::list<ResourceConfig> &_resources, Te
         res.resourceName = _TemplateReplace(it->resourceName, _instance);
         res.resourcePath = _TemplateReplace(it->resourcePath, _instance);
         res.logFile      = _TemplateReplace(it->logFile,      _instance);
+        res.dataFile     = _TemplateReplace(it->dataFile,     _instance);
         res.initialValue = _TemplateReplace(it->initialValue, _instance);
         res.maxAge       = it->maxAge;
         res.observable   = it->observable;
@@ -284,15 +285,18 @@ void TemplateConfig::GenerateResources(std::list<ResourceConfig> &_resources, Te
         std::list<ResourceMethodConfig>::iterator mit = it->methods.begin();
         for(; mit != it->methods.end(); mit++) {
             ResourceMethodConfig meth;
-            meth.type       = mit->type;
+            meth.type        = mit->type;
             std::list<std::string>::iterator fit = mit->format.begin();
             for(; fit != mit->format.end(); fit++) {
                 meth.format.push_back(_TemplateReplace(*fit, _instance));
             }
-            meth.printValue = mit->printValue;
-            meth.logValue   = mit->logValue;
-            meth.store      = mit->store;
-            meth.cmd        = _TemplateReplace(mit->cmd, _instance);
+            meth.printValue  = mit->printValue;
+            meth.logValue    = mit->logValue;
+            meth.store       = mit->store;
+            meth.cmd         = _TemplateReplace(mit->cmd, _instance);
+            meth.cmdStdin    = mit->cmdStdin;
+            meth.cmdTimeout  = mit->cmdTimeout;
+            meth.cmdLogInput = mit->cmdLogInput;
 
             res.methods.push_back(meth);
         }
