@@ -1,0 +1,24 @@
+#!/usr/bin/expect
+
+set timeout 5
+
+expect_before {
+    timeout { puts "timeout"; exit 2 }
+    eof     { puts "eof";     exit 1 }
+}
+
+# Spawn server
+spawn build/coap_server -c tests/configs/data_formatting.json
+set server_id $spawn_id
+expect "Attaching resource"
+sleep 0.3
+
+# Send data to server
+spawn coap-client -m put -e "1234WXYZ" coap://127.0.0.1/base64
+set client_id $spawn_id
+
+expect -i $server_id "base64:PUT: MTIzNFdYWVo=\r"
+
+close -i $client_id
+close -i $server_id
+

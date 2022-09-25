@@ -57,6 +57,7 @@ _OR_
                farlepet/coapserver-extra:<version> \
                -c /config.json -l /var/log/coapserver
 
+
 Building
 --------
 
@@ -84,6 +85,7 @@ The following CMake options may be useful:
    - Choose which c++ compiler to use
    - Tested with `g++` and `clang++`
 
+
 Manually building Docker image(s)
 ------
 
@@ -95,6 +97,27 @@ work with standard `docker build` (unless having previously run `docker buildx i
     # Build extra coapserver image - optional (base image must be built first)
     # Adds extra tools including cbor2json, msgpack2json, lz4, gzip, and xz
     docker buildx build -f Dockerfile.extra -t coapserver-extra .
+
+
+Running Test Cases
+------------------
+
+Test cases are written in [BATS](https://github.com/bats-core/bats-core) and
+[expect](https://core.tcl-lang.org/expect/index), both of these must be installed
+prior to running a test case.
+
+To run the entire test suite:
+
+    bats tests/
+
+To run a specific set of tests:
+
+    bats tests/<test>.bat
+
+This must be run from the root of the repository, and the `coap_server` binary
+must be present at `build/coap_server`, as with the build process mentioned
+above.
+
 
 Data Flow
 ---------

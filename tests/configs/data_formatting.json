@@ -1,0 +1,45 @@
+{
+    "endpoint": {
+        "address": "0.0.0.0",
+        "port":    "5683",
+        "logDir":  "logs"
+    },
+    "templates": [
+        {
+            "name":  "Formatter template",
+            "ident": "format",
+            "resources": [
+                {
+                    "name": "$1 Format Resource",
+                    "path": "$2",
+                    "logfile": "$1.log",
+                    "methods": {
+                        "PUT": {
+                            "format": "$1",
+                            "print":  true,
+                            "log":    false
+                        }
+                    }
+                }
+            ],
+            "args": [
+                "Common Name",
+                "Device ID"
+            ]
+        }
+    ],
+    "template-instances": [
+        {
+            "template": "format",
+            "template-args": [ "STRING", "string" ]
+        },
+        {
+            "template": "format",
+            "template-args": [ "HEX", "hex" ]
+        },
+        {
+            "template": "format",
+            "template-args": [ "BASE64", "base64" ]
+        }
+    ]
+}
