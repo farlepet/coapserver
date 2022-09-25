@@ -13,12 +13,13 @@ set server_id $spawn_id
 expect "Attaching resource"
 sleep 0.3
 
-# Send data to server
+# Plain string
 spawn coap-client -m put -e "1234WXYZ" coap://127.0.0.1/string
-set client_id $spawn_id
-
 expect -i $server_id "string:PUT: 1234WXYZ\r"
 
-close -i $client_id
+# String containing non-printable characters
+spawn coap-client -m put -e "12%01%02%8EF" coap://127.0.0.1/string
+expect -i $server_id "string:PUT: 12\\\\x01\\\\x02\\\\x8eF\r"
+
 close -i $server_id
 

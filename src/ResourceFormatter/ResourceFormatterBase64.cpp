@@ -1,5 +1,4 @@
 #include <iomanip>
-#include <stdio.h>
 
 #include "ResourceFormatter/ResourceFormatterBase64.hpp"
 
