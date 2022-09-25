@@ -1,0 +1,56 @@
+#!/usr/bin/expect
+
+set timeout 5
+
+# Create data file
+spawn sh -c "echo -n \"init value\" > data.bin"
+expect eof
+
+# Spawn server
+spawn build/coap_server -c tests/configs/file_resource.json
+set server_id $spawn_id
+expect {
+    "Attaching resource" {}
+    timeout { puts "timeout"; exit 2 }
+    eof     { puts "eof";     exit 1 }
+}
+sleep 0.3
+
+# Get file contents via CoAP
+spawn coap-client -m get coap://127.0.0.1/file
+expect {
+    "init value" {}
+    timeout { puts "timeout"; exit 2 }
+    eof     { puts "eof";     exit 1 }
+}
+
+# Write file via CoAP
+spawn coap-client -m put coap://127.0.0.1/file -e "remote set"
+expect -i $server_id {
+    "file:PUT: remote set" {}
+    timeout { puts "timeout"; exit 2 }
+    eof     { puts "eof";     exit 1 }
+}
+
+# There is an unexpected delay here of the timeout period, unsure why
+
+spawn cat data.bin
+expect {
+    "remote set" {}
+    timeout { puts "timeout"; exit 2 }
+    eof     { puts "eof";     exit 1 }
+}
+
+# Modify file locally
+spawn sh -c "echo -n \"local set\" > data.bin"
+expect eof
+
+spawn coap-client -m get coap://127.0.0.1/file
+expect {
+    "local set" {}
+    timeout { puts "timeout"; exit 2 }
+    eof     { puts "eof";     exit 1 }
+}
+
+close -i $server_id
+

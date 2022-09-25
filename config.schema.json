@@ -32,6 +32,7 @@
                     "path":       { "type": "string"  },
                     "logfile":    { "type": "string"  },
                     "value":      { "type": "string"  },
+                    "datafile":   { "type": "string"  },
                     "observable": { "type": "boolean" },
                     "maxage":     { "type": "number", "minimum": 1 },
                     "methods": {
@@ -96,3 +97,4 @@
         "additionalProperties": false
     }
 }
+

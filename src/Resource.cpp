@@ -38,6 +38,10 @@ queue(_queue) {
             }
         }
     }
+
+    if(this->config->dataFile.size()) {
+        this->dataFilePath      = this->config->dataFile;
+    }
 }
 
 Resource::~Resource(void) {
@@ -91,7 +95,14 @@ int Resource::attach(coap_context_t *ctx) {
     }
     coap_add_resource(ctx, this->res);
 
-    this->setValue(this->config->initialValue);
+    if(!this->dataFilePath.empty() &&
+       std::filesystem::exists(this->dataFilePath)) {
+        /* Set last update time to an hour ago to force a read. */
+        this->dataFileWriteTime = std::filesystem::last_write_time(this->dataFilePath) - std::chrono::hours(1);
+        this->getValue();
+    } else {
+        this->setValue(this->config->initialValue);
+    }
 
     return 0;
 }
@@ -140,9 +151,40 @@ void Resource::setValue(const std::vector<std::byte> &_value) {
     if(this->config->observable) {
         coap_resource_notify_observers(this->res, nullptr);
     }
+
+    if(!this->dataFilePath.empty()) {
+        std::ofstream file(this->dataFilePath, std::ios::out | std::ios::binary | std::ios::trunc);
+        file.write(reinterpret_cast<const char *>(this->value.data()), this->value.size());
+        this->dataFileWriteTime = std::filesystem::last_write_time(this->dataFilePath);
+    }
 }
 
 std::vector<std::byte> Resource::getValue() {
+    /* @todo Not sure how effecient this is, might be better to just occasionally
+     * check if the file has changed in a different thread. This would also allow
+     * for asynchronous notifications of a changed file. */
+    if(!this->dataFilePath.empty() &&
+       std::filesystem::exists(this->dataFilePath)) {
+        std::filesystem::file_time_type mtime = std::filesystem::last_write_time(this->dataFilePath);
+        if(mtime > this->dataFileWriteTime) {
+            /* File has been modified, read it. */
+            uintmax_t fileSize = std::filesystem::file_size(this->dataFilePath);
+            std::vector<std::byte> data(fileSize);
+
+            std::ifstream file(this->dataFilePath, std::ios::in | std::ios::binary);
+            file.read(reinterpret_cast<char *>(data.data()), fileSize);
+
+            /* @note This may cause interesting behaviour if the resource
+             * currently requesting the value is also an observer. */
+            this->value = data;
+            if(this->config->observable) {
+                coap_resource_notify_observers(this->res, nullptr);
+            }
+
+            this->dataFileWriteTime = mtime;
+        }
+    }
+
     return this->value;
 }
 

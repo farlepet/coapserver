@@ -26,12 +26,6 @@ struct RequestQueueItem {
         this->data = _data;
         this->time = _time;
     }
-    
-    /*RequestQueueItem(ResourceMethod *_src, std::string _str, struct timeval _time) {
-        this->src  = _src;
-        this->data = std::vector<uint8_t>(_str.begin(), _str.end());
-        this->time = _time;
-    }*/
 };
 
 /**

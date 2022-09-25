@@ -1,6 +1,7 @@
 #ifndef _RESOURCE_HPP_
 #define _RESOURCE_HPP_
 
+#include <filesystem>
 #include <fstream>
 #include <vector>
 #include <string>
@@ -20,13 +21,17 @@ class Resource {
 
         std::list<ResourceMethod *> methods;
 
-        //std::string value;
         /** Current value of the resource */
         std::vector<std::byte> value;
 
         coap_resource_t *res;
 
         std::fstream logFile;
+
+        /** Path to data file, if applicable. */
+        std::filesystem::path           dataFilePath;
+        /** Time at which data file was last written. */
+        std::filesystem::file_time_type dataFileWriteTime;
 
         template<ResourceMethodType T>
         static void coapHandlerX(coap_resource_t *resource, coap_session_t *session, const coap_pdu_t *request,

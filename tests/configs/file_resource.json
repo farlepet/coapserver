@@ -1,0 +1,30 @@
+{
+    "endpoint": {
+        "address": "0.0.0.0",
+        "port":    "5683",
+        "logDir":  "logs"
+    },
+    "resources": [
+        {
+            "name": "File Resource",
+            "path": "file",
+            "value": "12345",
+            "datafile": "data.bin",
+            "observable": true,
+            "maxage": 240,
+            "logfile": "res1.log",
+            "methods": {
+                "GET": {
+                    "format": "STRING",
+                    "print": true
+                },
+                "PUT": {
+                    "format": "STRING",
+                    "print": true,
+                    "log": true,
+                    "store": true
+                }
+            }
+        }
+    ]
+}
