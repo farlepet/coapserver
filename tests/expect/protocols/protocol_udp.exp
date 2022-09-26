@@ -9,11 +9,9 @@ expect eof
 # Spawn server
 spawn build/coap_server -c tests/configs/protocols/protocol_udp.json
 set server_id $spawn_id
-expect "Attaching resource" {} \
+expect "Attaching resource test" {} \
        timeout { puts "timeout"; exit 2 } \
        eof     { puts "eof";     exit 1 }
-
-sleep 0.1
 
 spawn coap-client -m get coap://127.0.0.1/test
 expect "12345" {} \

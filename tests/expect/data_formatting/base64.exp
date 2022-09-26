@@ -10,8 +10,7 @@ expect_before {
 # Spawn server
 spawn build/coap_server -c tests/configs/data_formatting.json
 set server_id $spawn_id
-expect "Attaching resource"
-sleep 0.3
+expect "Attaching resource base64"
 
 # Send data to server
 spawn coap-client -m put -e "1234WXYZ" coap://127.0.0.1/base64

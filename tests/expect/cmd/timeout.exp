@@ -1,0 +1,47 @@
+#!/usr/bin/expect
+
+set timeout 5
+
+# Spawn server
+spawn build/coap_server -c tests/configs/cmd.json
+set server_id $spawn_id
+
+expect_before {
+    timeout { puts "timeout"; exit 2 }
+    eof     { puts "eof";     exit 1 }
+}
+
+expect "Attaching resource timeout/1250/over"
+
+# NOTE: If command times out, the input string will print instead
+
+# < 750 ms
+spawn coap-client -m put coap://127.0.0.1/timeout/750/under -e "test"
+expect eof
+
+expect -i $server_id "PUT: ran"
+
+# > 750 ms
+spawn coap-client -m put coap://127.0.0.1/timeout/750/over -e "test"
+expect eof
+
+expect -i $server_id "did not exit after 750 ms"
+expect -i $server_id "PUT: test"
+
+# < 1250 ms
+spawn coap-client -m put coap://127.0.0.1/timeout/1250/under -e "test"
+expect eof
+
+expect -i $server_id "PUT: ran"
+
+# > 1250 ms
+spawn coap-client -m put coap://127.0.0.1/timeout/1250/over -e "test"
+expect eof
+
+expect -i $server_id "did not exit after 1250 ms"
+expect -i $server_id "PUT: test"
+
+
+
+close -i $server_id
+

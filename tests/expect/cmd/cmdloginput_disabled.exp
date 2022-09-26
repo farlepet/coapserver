@@ -1,0 +1,24 @@
+#!/usr/bin/expect
+
+set timeout 5
+
+# Spawn server
+spawn build/coap_server -c tests/configs/cmd.json
+set server_id $spawn_id
+
+expect_before {
+    timeout { puts "timeout"; exit 2 }
+    eof     { puts "eof";     exit 1 }
+}
+
+expect "Attaching resource cmdloginput/disabled"
+
+
+spawn coap-client -m put coap://127.0.0.1/cmdloginput/disabled -e "test"
+expect eof
+
+expect -i $server_id "PUT: test" { exit 1 } \
+                     "PUT: cmd"
+
+close -i $server_id
+

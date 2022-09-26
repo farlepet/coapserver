@@ -1,0 +1,21 @@
+#!/usr/bin/expect
+
+set timeout 5
+
+# Spawn server
+spawn build/coap_server -c tests/configs/cmd.json
+set server_id $spawn_id
+expect "Attaching resource env/payload" {} \
+       timeout { puts "timeout"; exit 2 } \
+       eof     { puts "eof";     exit 1 }
+
+
+spawn coap-client -m put coap://127.0.0.1/env/payload -e "test"
+expect eof
+
+expect -i $server_id "PUT: :test:" {} \
+                     timeout { puts "timeout"; exit 2 } \
+                     eof     { puts "eof";     exit 1 }
+
+close -i $server_id
+

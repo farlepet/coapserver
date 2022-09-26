@@ -1,0 +1,38 @@
+#!/usr/bin/expect
+
+set timeout 5
+
+# Spawn server
+spawn build/coap_server -c tests/configs/cmd.json
+set server_id $spawn_id
+expect "Attaching resource env/method" {} \
+       timeout { puts "timeout"; exit 2 } \
+       eof     { puts "eof";     exit 1 }
+
+# PUT
+spawn coap-client -m put coap://127.0.0.1/env/method -e "test"
+expect eof
+
+expect -i $server_id "PUT: :PUT:" {} \
+                     timeout { puts "timeout"; exit 2 } \
+                     eof     { puts "eof";     exit 1 }
+
+# POST
+spawn coap-client -m post coap://127.0.0.1/env/method -e "test"
+expect eof
+
+expect -i $server_id "POST: :POST:" {} \
+                     timeout { puts "timeout"; exit 2 } \
+                     eof     { puts "eof";     exit 1 }
+
+
+# GET
+spawn coap-client -m get coap://127.0.0.1/env/method -e "test"
+expect eof
+
+expect -i $server_id "GET: :GET:" {} \
+                     timeout { puts "timeout"; exit 2 } \
+                     eof     { puts "eof";     exit 1 }
+
+close -i $server_id
+

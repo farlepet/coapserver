@@ -1,0 +1,148 @@
+{
+    "endpoint": {
+        "address": "0.0.0.0",
+        "port":    "5683",
+        "logDir":  "logs"
+    },
+    "resources": [
+        {
+            "name": "cmdstdin Enabled",
+            "path": "cmdstdin/enabled",
+            "methods": {
+                "PUT": {
+                    "format":      "STRING",
+                    "print":       true,
+                    "cmd":         "sh -c \"echo ':'$(cat -)':'\"",
+                    "cmdstdin":    true
+                }
+            }
+        },
+        {
+            "name": "cmdstdin Disabled",
+            "path": "cmdstdin/disabled",
+            "methods": {
+                "PUT": {
+                    "format":      "STRING",
+                    "print":       true,
+                    "cmd":         "sh -c \"echo ':'$(cat -)':'\"",
+                    "cmdstdin":    false
+                }
+            }
+        },
+        {
+            "name": "cmdloginput Enabled",
+            "path": "cmdloginput/enabled",
+            "methods": {
+                "PUT": {
+                    "format":      "STRING",
+                    "print":       true,
+                    "cmd":         "sh -c \"echo 'cmd'\"",
+                    "cmdloginput": true
+                }
+            }
+        },
+        {
+            "name": "cmdloginput Disabled",
+            "path": "cmdloginput/disabled",
+            "methods": {
+                "PUT": {
+                    "format":      "STRING",
+                    "print":       true,
+                    "cmd":         "sh -c \"echo 'cmd'\"",
+                    "cmdloginput": false
+                }
+            }
+        },
+        {
+            "name": "Environment - COAPSERVER_PAYLOAD",
+            "path": "env/payload",
+            "methods": {
+                "PUT": {
+                    "format":      "STRING",
+                    "print":       true,
+                    "cmd":         "sh -c \"echo ':'$COAPSERVER_PAYLOAD':'\""
+                }
+            }
+        },
+        {
+            "name": "Environment - COAPSERVER_RESOURCE",
+            "path": "env/resource",
+            "methods": {
+                "PUT": {
+                    "format":      "STRING",
+                    "print":       true,
+                    "cmd":         "sh -c \"echo ':'$COAPSERVER_RESOURCE':'\""
+                }
+            }
+        },
+        {
+            "name": "Environment - COAPSERVER_METHOD",
+            "path": "env/method",
+            "methods": {
+                "PUT": {
+                    "format":      "STRING",
+                    "print":       true,
+                    "cmd":         "sh -c \"echo ':'$COAPSERVER_METHOD':'\""
+                },
+                "POST": {
+                    "format":      "STRING",
+                    "print":       true,
+                    "cmd":         "sh -c \"echo ':'$COAPSERVER_METHOD':'\""
+                },
+                "GET": {
+                    "format":      "STRING",
+                    "print":       true,
+                    "cmd":         "sh -c \"echo ':'$COAPSERVER_METHOD':'\""
+                }
+            }
+        },
+        {
+            "name": "Timeout - 750 ms - Under",
+            "path": "timeout/750/under",
+            "methods": {
+                "PUT": {
+                    "format":      "STRING",
+                    "print":       true,
+                    "cmd":         "sh -c \"sleep 0.5; echo 'ran'\"",
+                    "cmdtimeout":  750
+                }
+            }
+        },
+        {
+            "name": "Timeout - 750 ms - Over",
+            "path": "timeout/750/over",
+            "methods": {
+                "PUT": {
+                    "format":      "STRING",
+                    "print":       true,
+                    "cmd":         "sh -c \"sleep 1; echo 'ran'\"",
+                    "cmdtimeout":  750
+                }
+            }
+        },
+        {
+            "name": "Timeout - 1250 ms - Under",
+            "path": "timeout/1250/under",
+            "methods": {
+                "PUT": {
+                    "format":      "STRING",
+                    "print":       true,
+                    "cmd":         "sh -c \"sleep 1; echo 'ran'\"",
+                    "cmdtimeout":  1250
+                }
+            }
+        },
+        {
+            "name": "Timeout - 1250 ms - Over",
+            "path": "timeout/1250/over",
+            "methods": {
+                "PUT": {
+                    "format":      "STRING",
+                    "print":       true,
+                    "cmd":         "sh -c \"sleep 1.5; echo 'ran'\"",
+                    "cmdtimeout":  1250
+                }
+            }
+        }
+    ]
+}

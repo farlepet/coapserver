@@ -9,11 +9,9 @@ expect eof
 # Spawn server
 spawn build/coap_server -c tests/configs/file_resource.json
 set server_id $spawn_id
-expect "Attaching resource" {} \
+expect "Attaching resource file" {} \
        timeout { puts "timeout"; exit 2 } \
        eof     { puts "eof";     exit 1 }
-
-sleep 0.3
 
 # Get file contents via CoAP
 send_user -- "\n---- GET file contents ----\n"
@@ -44,7 +42,7 @@ spawn sh -c "echo -n \"local set\" > data.bin"
 expect eof
 
 # Ensure server has time to notice file change
-sleep 5
+sleep 4
 
 spawn coap-client -m get coap://127.0.0.1/file
 expect "local set" {} \
