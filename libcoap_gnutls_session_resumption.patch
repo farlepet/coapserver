@@ -1,0 +1,81 @@
+diff --git a/src/coap_gnutls.c b/src/coap_gnutls.c
+index 661967b..d3db042 100644
+--- a/src/coap_gnutls.c
++++ b/src/coap_gnutls.c
+@@ -2491,6 +2491,64 @@ coap_dtls_receive(coap_session_t *c_session,
+   return ret;
+ }
+ 
++#define SESSION_CACHE_MAX 64
++static struct {
++    gnutls_datum_t key;
++    gnutls_datum_t data;
++} _db_cache[SESSION_CACHE_MAX] = { 0 };
++
++static int
++_db_store(void *param1, gnutls_datum_t key, gnutls_datum_t data) {
++    for(unsigned i = 0; i < SESSION_CACHE_MAX; i++) {
++        if(_db_cache[i].key.size == 0) {
++            _db_cache[i].key.size = key.size;
++            _db_cache[i].key.data = gnutls_malloc(key.size);
++	        assert(_db_cache[i].key.data != NULL);
++            memcpy(_db_cache[i].key.data, key.data, key.size);
++
++            _db_cache[i].data.size = data.size;
++            _db_cache[i].data.data = gnutls_malloc(data.size);
++            memcpy(_db_cache[i].data.data, data.data, data.size);
++	        assert(_db_cache[i].data.data != NULL);
++
++            return 0;
++        }
++    }
++
++    return 0;
++}
++
++static gnutls_datum_t
++_db_retrieve(void *param1, gnutls_datum_t key) {
++    gnutls_datum_t dat = { NULL, 0 };
++
++    for(unsigned i = 0; i < SESSION_CACHE_MAX; i++) {
++        if((_db_cache[i].key.size == key.size) &&
++           !memcmp(_db_cache[i].key.data, key.data, key.size)) {
++            dat.size = _db_cache[i].data.size;
++            dat.data = gnutls_malloc(dat.size);
++            memcpy(dat.data, _db_cache[i].data.data, dat.size);
++            break;
++        }
++    }
++
++    return dat;
++}
++
++static int
++_db_remove(void *param1, gnutls_datum_t key) {
++    for(unsigned i = 0; i < SESSION_CACHE_MAX; i++) {
++        if((_db_cache[i].key.size == key.size) &&
++           !memcmp(_db_cache[i].key.data, key.data, key.size)) {
++            gnutls_free(_db_cache[i].key.data);
++            gnutls_free(_db_cache[i].data.data);
++            memset(&_db_cache[i], 0, sizeof(_db_cache[0]));
++            return 0;
++        }
++    }
++	return 0;
++}
++
+ /*
+  * return -1  failure
+  *         0  not completed
+@@ -2542,6 +2600,11 @@ coap_dtls_hello(coap_session_t *c_session,
+     gnutls_dtls_prestate_set(g_env->g_session, &prestate);
+   }
+ 
++  gnutls_db_set_retrieve_function(g_env->g_session, _db_retrieve);
++  gnutls_db_set_store_function(g_env->g_session,    _db_store);
++  gnutls_db_set_remove_function(g_env->g_session,   _db_remove);
++  gnutls_db_set_ptr(g_env->g_session, NULL);
++
+   ssl_data = &g_env->coap_ssl_data;
+   ssl_data->pdu = data;
+   ssl_data->pdu_len = data_len;

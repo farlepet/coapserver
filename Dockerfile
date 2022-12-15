@@ -2,9 +2,13 @@
 FROM --platform=$TARGETPLATFORM alpine:3.15 AS build
 RUN apk add --no-cache g++ make cmake gnutls-dev boost-dev nlohmann-json git
 
+COPY . /opt/coapserver
+
 # Build libcoap
 RUN set -ex; \
     git clone https://github.com/obgm/libcoap.git -b v4.3.0 /opt/libcoap; \
+    cd /opt/libcoap; \
+    git apply /opt/coapserver/libcoap_gnutls_session_resumption.patch; \
     mkdir -p /opt/libcoap/build; \
     cd /opt/libcoap/build; \
     cmake .. -DBUILD_SHARED_LIBS=ON -DENABLE_CLIENT_CODE=OFF \
@@ -12,7 +16,6 @@ RUN set -ex; \
     cmake --build . --parallel $(nproc) -- install;
 
 # Build coapserver
-COPY . /opt/coapserver
 RUN set -ex; \
     rm -rf /opt/coapserver/build; \
     mkdir -p /opt/coapserver/build; \

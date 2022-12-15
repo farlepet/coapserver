@@ -5,3 +5,4 @@ coap_server
 config.json
 .vscode
 build
+tags
